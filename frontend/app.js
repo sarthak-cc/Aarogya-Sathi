@@ -20,7 +20,7 @@
     convId: null,
     phase: "select_language", // select_language | ready | listening | processing | playing_response | emergency | location | help
     view: "menu",
-    lang: "en-IN",
+    lang: "hi-IN",
     langSelected: false,
     languages: [],
     lastTurn: null,
@@ -203,17 +203,84 @@
     setTimeout(() => el.lcd.classList.remove("flash"), 1100);
   }
 
-  // ---------- Screens ----------
-  const MAIN_MENU_TEXT = "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press CALL to connect. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.";
+  // ---------- Screens & Localization ----------
+  const I18N = {
+    "hi-IN": {
+      name: "Hindi",
+      native: "हिंदी",
+      menuTitle: "भाषा चुनें",
+      pressDashToSpeak: "बोलने के लिए – (डैश) दबाएँ",
+      pressStarMenu: "मेनू सुनने के लिए * दबाएँ",
+      pressEndStop: "रोकने के लिए END दबाएँ",
+      readyTitle: "तैयार",
+      langLabel: "भाषा:",
+      readyHelp: "– दबाकर बोलना शुरू करें<br>– दोबारा दबाकर भेजें<br>4: नज़दीकी अस्पताल<br>*: मेनू | END: रोकें",
+      listeningTitle: "सुन रहे हैं",
+      listeningMsg: "अपना सवाल बोलिए…",
+      listeningDashSend: "भेजने के लिए – दबाएँ",
+      processingTitle: "प्रक्रिया जारी",
+      processingWait: "कृपया प्रतीक्षा करें",
+      responseTitle: "उत्तर",
+      nextPrompt: "अगला सवाल बोलने के लिए – दबाएँ",
+      micDeniedTitle: "माइक बंद है",
+      micDeniedMsg: "माइक्रोफ़ोन की अनुमति नहीं मिली।\nनीचे दिए गए बॉक्स में सवाल टाइप करें।",
+      menuSpoken: "हिंदी के लिए 1 दबाएँ। अंग्रेजी के लिए 2 दबाएँ। असमिया के लिए 3 दबाएँ। नज़दीकी अस्पताल के लिए 4 दबाएँ। बोलने के लिए डैश बटन दबाएँ। मेनू दोबारा सुनने के लिए स्टार दबाएँ। रोकने के लिए एंड बटन दबाएँ।",
+    },
+    "as-IN": {
+      name: "Assamese",
+      native: "অসমীয়া",
+      menuTitle: "ভাষা বাছক",
+      pressDashToSpeak: "ক'বলৈ – (ডেশ্ব) টিপক",
+      pressStarMenu: "মেনু শুনিবলৈ * টিপক",
+      pressEndStop: "বন্ধ কৰিবলৈ END টিপক",
+      readyTitle: "প্ৰস্তুত",
+      langLabel: "ভাষা:",
+      readyHelp: "– টিপি কথা কওক<br>– আকৌ টিপি প্ৰেৰণ কৰক<br>4: ওচৰৰ চিকিৎসালয়<br>*: মেনু | END: বন্ধ",
+      listeningTitle: "শুনি থকা হৈছে",
+      listeningMsg: "আপোনাৰ প্ৰশ্নটো কওক…",
+      listeningDashSend: "প্ৰেৰণ কৰিবলৈ – টিপক",
+      processingTitle: "প্ৰক্ৰিয়া চলিছে",
+      processingWait: "অনুগ্ৰহ কৰি অপেক্ষা কৰক",
+      responseTitle: "উত্তৰ",
+      nextPrompt: "পৰৱৰ্তী প্ৰশ্নৰ বাবে – টিপক",
+      micDeniedTitle: "মাইক সংযোগ নাই",
+      micDeniedMsg: "মাইক্ৰ'ফোন ব্যৱহাৰৰ অনুমতি নাই।\nতলৰ বাকচত প্ৰশ্নটো লিখক।",
+      menuSpoken: "হিন্দীৰ বাবে 1 টিপক। ইংৰাজীৰ বাবে 2 টিপক। অসমীয়াৰ বাবে 3 টিপক। ওচৰৰ হাস্পতালৰ বাবে 4 টিপক। কথা ক'বলৈ ডেশ্ব টিপক। মেনু আকৌ শুনিবলৈ ষ্টাৰ টিপক। বন্ধ কৰিবলৈ এণ্ড টিপক।",
+    },
+    "en-IN": {
+      name: "English",
+      native: "English",
+      menuTitle: "SELECT LANGUAGE",
+      pressDashToSpeak: "Press – (dash) to speak",
+      pressStarMenu: "Press * to replay menu",
+      pressEndStop: "Press END to stop",
+      readyTitle: "READY",
+      langLabel: "Language:",
+      readyHelp: "Press – (dash) to speak<br>Press – again to send<br>4: Nearby Hospitals<br>*: Main Menu | END: Stop",
+      listeningTitle: "LISTENING",
+      listeningMsg: "Speak your question…",
+      listeningDashSend: "Press – (dash) to send",
+      processingTitle: "PROCESSING",
+      processingWait: "Please wait",
+      responseTitle: "RESPONSE",
+      nextPrompt: "Press – (dash) to speak next",
+      micDeniedTitle: "Mic Blocked",
+      micDeniedMsg: "Microphone access was denied.\nYou can type your question in the input box below.",
+      menuSpoken: "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.",
+    },
+  };
+
   const menuVoiceCache = {};
 
   async function speakMainMenu() {
     stopAudio();
     if (el.mute.checked) return;
-    const l = S.langSelected ? S.lang : "en-IN";
+    const l = S.langSelected ? S.lang : "hi-IN";
+    const i18n = I18N[l] || I18N["en-IN"];
+    const textToSpeak = i18n.menuSpoken;
     try {
       if (!menuVoiceCache[l]) {
-        menuVoiceCache[l] = await post("/api/speak", { text: MAIN_MENU_TEXT, lang: l });
+        menuVoiceCache[l] = await post("/api/speak", { text: textToSpeak, lang: l });
       }
       if (menuVoiceCache[l] && menuVoiceCache[l].audio_url) {
         playVoice(menuVoiceCache[l]);
@@ -225,22 +292,24 @@
     stopAudio();
     S.view = "menu";
     S.phase = "select_language";
-    const curName = S.langSelected ? (S.lang === "hi-IN" ? "Hindi" : (S.lang === "as-IN" ? "Assamese" : "English")) : "None";
+    const l = S.langSelected ? S.lang : "hi-IN";
+    const i18n = I18N[l] || I18N["hi-IN"];
+    const curName = S.langSelected ? (i18n.name || "Hindi") : "None";
     const html = `
-      ${heading("SELECT LANGUAGE")}
+      ${heading(i18n.menuTitle || "SELECT LANGUAGE")}
       <ul class="menu" style="margin:2px 0 4px">
-        <li><b>1</b> Hindi</li>
+        <li><b>1</b> Hindi (हिंदी)</li>
         <li><b>2</b> English</li>
-        <li><b>3</b> Assamese</li>
+        <li><b>3</b> Assamese (অসমীয়া)</li>
         <li><b>4</b> Hospitals</li>
       </ul>
       <div style="font-size:0.75rem; line-height:1.2; opacity:0.95">
-        Press – (dash) to speak (${esc(curName)})<br>
-        Press * to replay menu<br>
-        Press END to stop
+        ${i18n.pressDashToSpeak} (${esc(curName)})<br>
+        ${i18n.pressStarMenu}<br>
+        ${i18n.pressEndStop}
       </div>
     `;
-    lcd({ html, mode: "select-language" });
+    lcd({ html, mode: "select-language", lang: l });
     softkeysForState();
     setControls();
     if (speak) {
@@ -260,51 +329,51 @@
   }
   function screenProcessing(text = "Processing") {
     S.phase = "processing";
+    const l = S.langSelected ? S.lang : "en-IN";
+    const i18n = I18N[l] || I18N["en-IN"];
     const html = `
-      ${heading("PROCESSING")}
+      ${heading(i18n.processingTitle || "PROCESSING")}
       <div class="center" style="margin-top:8px">
         <span class="hourglass">${pix("hourglass", "pix big")}</span>
         <span style="font-weight:bold; margin-top:4px">${esc(text)}…</span>
-        <span style="font-size:0.75rem; margin-top:4px; opacity:0.85">Please wait</span>
+        <span style="font-size:0.75rem; margin-top:4px; opacity:0.85">${i18n.processingWait || "Please wait"}</span>
       </div>
     `;
-    lcd({ html, mode: "processing" });
+    lcd({ html, mode: "processing", lang: l });
     softkeysForState();
     setControls();
   }
   function screenListening() {
     S.view = "main";
     S.phase = "listening";
+    const l = S.langSelected ? S.lang : "en-IN";
+    const i18n = I18N[l] || I18N["en-IN"];
     const html = `
-      ${heading("LISTENING")}
+      ${heading(i18n.listeningTitle || "LISTENING")}
       <div class="center" style="margin-top:4px">
         <div class="eq">${"<i></i>".repeat(8)}</div>
         ${pix("mic")}
-        <span style="font-weight:bold; margin-top:2px">Listening…</span>
-        <span style="font-size:0.8rem; margin-top:3px">Speak your question</span>
-        <span style="font-size:0.75rem; margin-top:2px; opacity:0.9">Press – (dash) to send</span>
+        <span style="font-weight:bold; margin-top:2px">${i18n.listeningMsg || "Listening…"}</span>
+        <span style="font-size:0.75rem; margin-top:2px; opacity:0.9">${i18n.listeningDashSend || "Press – (dash) to send"}</span>
       </div>
     `;
-    lcd({ html, mode: "listening" });
+    lcd({ html, mode: "listening", lang: l });
     softkeysForState();
     setControls();
   }
   function screenReady() {
     S.view = "main";
     S.phase = "ready";
-    const name = S.lang === "hi-IN" ? "Hindi" : (S.lang === "as-IN" ? "Assamese" : "English");
-    const native = S.lang === "hi-IN" ? "हिंदी" : (S.lang === "as-IN" ? "অসমীয়া" : "English");
+    const l = S.langSelected ? S.lang : "hi-IN";
+    const i18n = I18N[l] || I18N["hi-IN"];
     const html = `
-      ${heading("READY")}
-      <p style="margin:4px 0 2px"><b>Language:</b> ${esc(name)} (${esc(native)})</p>
-      <p style="margin:2px 0 4px">Press <b>– (dash)</b> to speak.</p>
-      <div style="margin-top:4px; font-size:0.75rem; line-height:1.2; opacity:0.9">
-        Press – again to send<br>
-        4: Nearby Hospitals<br>
-        *: Main Menu  END: Stop
+      ${heading(i18n.readyTitle || "READY")}
+      <p style="margin:4px 0 2px"><b>${i18n.langLabel}</b> ${esc(i18n.name)} (${esc(i18n.native)})</p>
+      <div style="margin-top:4px; font-size:0.75rem; line-height:1.2; opacity:0.95">
+        ${i18n.readyHelp}
       </div>
     `;
-    lcd({ html, mode: "ready", lang: S.lang });
+    lcd({ html, mode: "ready", lang: l });
     softkeysForState();
     setControls();
   }
@@ -331,7 +400,9 @@
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "emergency", assertive: true });
       if (animate) flashAmber();
     } else {
-      const head = `<div class="heading">RESPONSE</div><div style="font-size:0.75rem;opacity:0.85;margin-bottom:2px">Press – (dash) to speak next</div>`;
+      const l = (turn.answer && turn.answer.lang) || S.lang || "en-IN";
+      const i18n = I18N[l] || I18N["en-IN"];
+      const head = `<div class="heading">${esc(i18n.responseTitle || "RESPONSE")}</div><div style="font-size:0.75rem;opacity:0.85;margin-bottom:2px">${esc(i18n.nextPrompt || "Press – (dash) to speak next")}</div>`;
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "response" });
     }
     softkeysForState();
@@ -601,7 +672,9 @@
     } catch (_) {
       S.recording = false;
       el.rec.hidden = true;
-      screenNotice("Mic Blocked", "Microphone access was denied.\nYou can type your question in the input box below.");
+      const l = S.langSelected ? S.lang : "en-IN";
+      const i18n = I18N[l] || I18N["en-IN"];
+      screenNotice(i18n.micDeniedTitle || "Mic Blocked", i18n.micDeniedMsg || "Microphone access was denied.\nYou can type your question in the input box below.");
       el.typeInput.disabled = false;
       el.typeSend.disabled = false;
       el.typeInput.focus();

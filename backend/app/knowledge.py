@@ -177,7 +177,7 @@ CARDS: list[Card] = [
     ),
     Card(
         "elderly_bp", "Healthy ageing, blood pressure and sugar",
-        ("blood pressure", "bp", "sugar", "diabetes", "old age", "elderly", "grandmother", "grandfather", "headache"),
+        ("blood pressure", "bp", "sugar", "diabetes", "old age", "elderly", "grandmother", "grandfather"),
         (
             "Adults over 30 can get free BP and sugar checks at Ayushman Arogya Mandir (health and wellness centres).",
             "Less salt, regular walking, and avoiding tobacco and alcohol help keep blood pressure healthy.",
@@ -185,6 +185,36 @@ CARDS: list[Card] = [
         ),
         ("Sudden severe headache, chest pain, weakness on one side, or confusion is an emergency.",),
         "National Programme for Prevention and Control of NCDs (public guidance)",
+    ),
+    Card(
+        "headache", "Headache and tension",
+        ("headache", "head pain", "head ache", "head hurts", "sardard", "sir dard", "muror bikh", "matha betha"),
+        (
+            "Most headaches are tension headaches or due to tiredness, dehydration, eye strain or lack of sleep.",
+            "Resting in a quiet, dark room and drinking clean water often helps ease routine headaches.",
+            "Avoid taking repeated unprescribed painkillers from shops, as overuse can cause rebound headaches and harm the stomach.",
+        ),
+        (
+            "Sudden thunderclap headache (worst headache of your life).",
+            "Headache with fever, stiff neck, vomiting, or confusion.",
+            "Headache accompanied by weakness on one side of the body, slurred speech, or vision changes.",
+            "Headache following a head injury or in a pregnant woman.",
+        ),
+        "WHO / NHS public guidance on headache assessment",
+    ),
+    Card(
+        "poisoning", "Suspected poisoning and chemical safety",
+        ("poison", "poisoning", "toxic", "pesticide", "insecticide", "kerosene", "chemical", "zahar", "keetnashak"),
+        (
+            "Any ingestion of poison, agricultural pesticides, kerosene, or overdose of medicines is a critical emergency.",
+            "Do NOT induce vomiting unless specifically instructed by a medical doctor, as vomiting caustic chemicals can burn the food pipe or enter lungs.",
+            "Do not give home remedies, raw eggs, or large volumes of water or salt.",
+            "Keep all agricultural chemicals, pesticides, and medicines in locked containers away from children.",
+        ),
+        (
+            "Take the person to the nearest emergency hospital immediately and bring the bottle, packet, or chemical container along.",
+        ),
+        "WHO / AIIMS National Poisons Information Centre guidance",
     ),
     Card(
         "medicine_safety", "Medicine safety",
