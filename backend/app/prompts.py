@@ -27,6 +27,7 @@ TIPS_EN: dict[str, str] = {
     "seizure": "Do not put anything in the mouth. Move hard objects away and turn the person on their side.",
     "snakebite": "Keep the person still. Do not cut, suck or tie the bite.",
     "poisoning": "Do not make the person vomit. Take the container with you to the hospital.",
+    "headache_danger": "Keep the person lying down in a dark, quiet place and go to the hospital immediately.",
     "pregnancy_danger": "Keep her lying on her left side and go to the hospital now.",
     "child_danger": "Keep the child warm and take the child to a hospital now.",
     "stiff_neck": "Go to a hospital now. This needs a doctor today.",
@@ -47,6 +48,9 @@ HAND: dict[str, dict[str, str]] = {
         "tip_snakebite": "व्यक्ति को स्थिर रखें। काटे हुए स्थान को न काटें, न चूसें, न बाँधें।",
         "tip_unconscious": "व्यक्ति को करवट से लिटाएँ और देखें कि साँस चल रही है।",
         "tip_bleeding": "घाव पर साफ़ कपड़े से ज़ोर से दबाकर रखें।",
+        "tip_poisoning": "उल्टी कराने की कोशिश न करें। दवाई या कीटनाशक का डिब्बा साथ लेकर तुरंत अस्पताल जाएँ।",
+        "tip_headache_danger": "व्यक्ति को शांत और अंधेरे कमरे में लिटाएँ और तुरंत अस्पताल ले जाएँ।",
+        "tip_stroke": "लक्षण शुरू होने का समय नोट करें। खाने या पीने को कुछ न दें।",
     },
     "as-IN": {
         "emergency": "এইটো জৰুৰী অৱস্থা হ'ব পাৰে। এতিয়াই 112 নম্বৰত ফোন কৰক, বা ওচৰৰ কাৰোবাক মানুহজনক তৎক্ষণাত ওচৰৰ হাস্পতাললৈ লৈ যাবলৈ কওক। অপেক্ষা নকৰিব।",
@@ -56,12 +60,17 @@ HAND: dict[str, dict[str, str]] = {
         "tip_chest_pain": "মানুহজনক বহুৱাই জিৰণি ল'বলৈ দিয়ক। খোজ কাঢ়িবলৈ নিদিব। টান কাপোৰ ঢিলা কৰক।",
         "tip_breathing": "মানুহজনক পোন হৈ বহিবলৈ দিয়ক আৰু টান কাপোৰ ঢিলা কৰক।",
         "tip_snakebite": "মানুহজনক স্থিৰ কৰি ৰাখক। কামোৰা ঠাই কাটিব, চুহিব বা বান্ধিব নালাগে।",
+        "tip_poisoning": "বমি কৰাবলৈ চেষ্টা নকৰিব। ঔষধ বা কীটনাশকৰ বটলটো লগত লৈ তৎক্ষণাত চিকিৎসালয়লৈ যাওক।",
+        "tip_headache_danger": "মানুহজনক শান্ত ঠাইত শুৱাই ৰাখক আৰু পলম নকৰি হাস্পতাললৈ লৈ যাওক।",
+        "tip_stroke": "লক্ষণ আৰম্ভ হোৱাৰ সময় মনত ৰাখক। খোৱা বা পানী খাবলৈ নিদিব।",
     },
     "bn-IN": {
         "emergency": "এটি জরুরি অবস্থা হতে পারে। এখনই 112 নম্বরে ফোন করুন, বা কাছের কাউকে বলুন রোগীকে এখনই কাছের হাসপাতালে নিয়ে যেতে। দেরি করবেন না।",
         "crisis": "আপনি মূল্যবান, এবং সাহায্য এখনই পাওয়া যায়। টেলি-মানসে 14416 নম্বরে ফোন করুন, বিপদ হলে 112 নম্বরে। পারলে বিশ্বস্ত কারও সঙ্গে থাকুন।",
         "ask_location": "কাছের হাসপাতাল খুঁজতে আপনার লোকেশন শেয়ার করুন, বা আপনার গ্রাম, শহর, পিন কোড বা কাছের কোনো পরিচিত জায়গার নাম লিখুন।",
         "not_heard": "দুঃখিত, আমি ঠিকমতো শুনতে পাইনি। আবার বলুন, বা প্রশ্নটি লিখুন।",
+        "tip_poisoning": "বমি করানোর চেষ্টা করবেন না। বিষ বা ওষুধের পাত্রটি সাথে নিয়ে দ্রুত হাসপাতালে যান।",
+        "tip_headache_danger": "রোগীকে শান্ত ঘরে শুইয়ে রাখুন এবং দেরি না করে হাসপাতালে নিয়ে যান।",
     },
 }
 

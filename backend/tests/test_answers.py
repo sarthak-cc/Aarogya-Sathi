@@ -118,3 +118,15 @@ def test_dose_in_ai_answer_is_removed(client, live):
     assert t["medicine"] == {"request": True, "dose_removed": True}
     assert "500 mg" not in t["answer"]["text"] and "pharmacist" in t["answer"]["text"]
     assert "medicine_safety" in [c["id"] for c in t["answer"]["cards"]]
+
+
+def test_follow_up_retains_contextual_card_retrieval(client, live):
+    live.on("/chat/completions", llm_reply("TRIAGE: ROUTINE\nHeadache often eases with rest and quiet."))
+    cid = start(client)
+    # First turn sets symptom context
+    client.post(f"/api/conversations/{cid}/ask", json={"text": "I have had a headache for hours."})
+    # Second turn is brief ("for two days")
+    t2 = client.post(f"/api/conversations/{cid}/ask", json={"text": "Now it has been two days."}).json()
+    assert t2["error"] is None
+    # Card retrieval must include headache card because of contextual continuity
+    assert "headache" in [c["id"] for c in t2["answer"]["cards"]]

@@ -34,9 +34,9 @@ class Language:
 REGISTRY: dict[str, Language] = {lang.code: lang for lang in [
     Language("hi-IN", "Hindi", "हिन्दी", "Devanagari", ("All NE states",), ("sarvam", "groq"), ("sarvam",), ("sarvam",),
              "मुझे दो दिन से बुखार है, क्या करूँ?"),
-    Language("as-IN", "Assamese", "অসমীয়া", "Assamese (Bengali-Assamese)", ("Assam",), ("sarvam",), ("sarvam",), ("mms", "parler"),
+    Language("as-IN", "Assamese", "অসমীয়া", "Assamese (Bengali-Assamese)", ("Assam",), ("sarvam",), ("sarvam",), ("sarvam-clone", "mms", "parler"),
              "মোৰ দুদিন ধৰি জ্বৰ হৈছে, কি কৰিম?",
-             "Sarvam has no Assamese voice. Spoken answers need the optional local MMS voice or a Parler server."),
+             "Sarvam standard Bulbul has no Assamese voice. Spoken answers use a cloned voice (SARVAM_VOICE_ID), or optional MMS/Parler."),
     Language("en-IN", "English", "English", "Latin", ("All NE states",), ("sarvam", "groq"), ("identity",), ("sarvam",),
              "I have had a fever for two days. What should I do?"),
     Language("bn-IN", "Bengali", "বাংলা", "Bengali", ("Tripura", "Barak Valley"), ("sarvam", "groq"), ("sarvam",), ("sarvam",),

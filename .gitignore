@@ -7,3 +7,5 @@ venv/
 frontend/prompts/
 *.wav
 backend/data/
+.coverage
+*.db

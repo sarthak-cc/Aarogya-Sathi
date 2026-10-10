@@ -100,7 +100,10 @@ async def ask(conv: Conversation, text: str, level: str = "standard", heard: Opt
     # 3. Real LLM answer for routine questions
     med_request = medicine.is_prescription_request(text, english or "")
     turn["medicine"]["request"] = med_request
-    cards = knowledge.retrieve(english or "")
+    # For follow-ups (e.g., "for 2 days"), combine prior questions from conversation history
+    past_questions = " ".join(m["content"] for m in (conv.history or []) if m.get("role") == "user")
+    retrieval_query = f"{past_questions} {english or text}".strip()
+    cards = knowledge.retrieve(retrieval_query)
     if med_request:
         cards = [knowledge.by_id("medicine_safety")] + [c for c in cards if c.id != "medicine_safety"][:1]
     try:

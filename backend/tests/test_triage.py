@@ -47,3 +47,49 @@ def test_routine_question_not_flagged():
 
 def test_food_poisoning_is_not_an_emergency_trigger():
     assert triage.assess("I think I have food poisoning").level != Level.EMERGENCY
+
+
+def test_ordinary_headache_is_not_emergency():
+    # Routine headache questions must be Level.NONE
+    for q in [
+        "I have a slight headache today",
+        "मुझे सुबह से हल्का सिरदर्द है",
+        "মোৰ মূৰৰ বিষ হৈছে, কি কৰিম?",  # Assamese headache
+        "মাথা বিষ খেতে কি করব",
+        "mere sar me dard hai",
+    ]:
+        res = triage.assess(q)
+        assert res.level == Level.NONE, f"Expected NONE for '{q}', got {res.level}"
+
+
+def test_dangerous_headache_is_emergency():
+    # Thunderclap / severe headache with red flags
+    for q in [
+        "worst headache of my life and I am vomiting",
+        "sudden severe headache and blurred vision",
+        "अचानक बहुत तेज सिरदर्द और उल्टी हो रही है",
+    ]:
+        res = triage.assess(q)
+        assert res.level == Level.EMERGENCY
+        assert "headache_danger" in [m["rule"] for m in res.matches]
+
+
+def test_cannot_speak_language_does_not_trigger_stroke():
+    # Innocent language capability statements should not trigger stroke emergency
+    for q in [
+        "I cannot speak English well",
+        "I can't speak Hindi",
+        "मैं अंग्रेजी बोल नहीं पाता",
+        "মই ভালকৈ ক'ব নোৱাৰোঁ",
+    ]:
+        res = triage.assess(q)
+        assert res.level != Level.EMERGENCY, f"Unexpected emergency for '{q}'"
+
+
+def test_poisoning_distinguishes_real_ingestion_from_headache():
+    # Poisoning rule should catch actual toxic ingestion
+    assert triage.assess("He drank pesticide by accident").level == Level.EMERGENCY
+    assert triage.assess("उसने ज़हर पी लिया").level == Level.EMERGENCY
+    assert triage.assess("সি বিহ খালে").level == Level.EMERGENCY
+    # But ordinary pain relief or mild questions should NOT trigger poisoning
+    assert triage.assess("মূৰৰ বিষ খেদিবলৈ কি কৰিম?").level == Level.NONE

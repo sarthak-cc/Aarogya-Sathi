@@ -27,15 +27,15 @@ CARDS: list[Card] = [
         "fever", "Fever (general)",
         ("fever", "temperature", "hot body", "bukhar", "jor", "jwar"),
         (
-            "Fever is the body fighting an infection. Rest and drink plenty of clean water.",
-            "In the North East, fever can be a sign of malaria, dengue, Japanese encephalitis or scrub typhus, so a blood test at the health centre is often needed.",
-            "Do not take leftover medicines or injections from a shop without advice.",
-            "A wet cloth on the forehead can help the person feel more comfortable.",
+            "Drink plenty of clean water to stay hydrated and rest in a cool, airy place.",
+            "A wet cloth on the forehead helps bring down discomfort safely.",
+            "In the North East, fever can be caused by infections like malaria or dengue, so an ASHA worker or local health centre can check you if it persists.",
+            "Do not buy leftover medicines or unadvised pain injections from a shop.",
         ),
         (
-            "Fever lasting more than 2 to 3 days.",
-            "Fever with shivering, severe headache, stiff neck, rash, confusion, bleeding, or a black scab on the skin.",
-            "Any fever in a baby younger than 3 months, a pregnant woman, or an elderly person.",
+            "Fever with chills, severe headache, stiff neck, rash, difficulty breathing, or confusion.",
+            "Fever in a young infant, pregnant woman, or frail elder.",
+            "Fever continuing without improvement after 2 to 3 days.",
         ),
         "General guidance consistent with WHO / MoHFW public messaging",
     ),
@@ -177,7 +177,7 @@ CARDS: list[Card] = [
     ),
     Card(
         "elderly_bp", "Healthy ageing, blood pressure and sugar",
-        ("blood pressure", "bp", "sugar", "diabetes", "old age", "elderly", "grandmother", "grandfather", "headache"),
+        ("blood pressure", "bp", "sugar", "diabetes", "old age", "elderly", "grandmother", "grandfather"),
         (
             "Adults over 30 can get free BP and sugar checks at Ayushman Arogya Mandir (health and wellness centres).",
             "Less salt, regular walking, and avoiding tobacco and alcohol help keep blood pressure healthy.",
@@ -185,6 +185,36 @@ CARDS: list[Card] = [
         ),
         ("Sudden severe headache, chest pain, weakness on one side, or confusion is an emergency.",),
         "National Programme for Prevention and Control of NCDs (public guidance)",
+    ),
+    Card(
+        "headache", "Headache and tension",
+        ("headache", "head pain", "head ache", "head hurts", "sardard", "sir dard", "muror bikh", "matha betha"),
+        (
+            "Most headaches are tension headaches or due to tiredness, dehydration, eye strain or lack of sleep.",
+            "Resting in a quiet, dark room and drinking clean water often helps ease routine headaches.",
+            "Avoid taking repeated unprescribed painkillers from shops, as overuse can cause rebound headaches and harm the stomach.",
+        ),
+        (
+            "Sudden thunderclap headache (worst headache of your life).",
+            "Headache with fever, stiff neck, vomiting, or confusion.",
+            "Headache accompanied by weakness on one side of the body, slurred speech, or vision changes.",
+            "Headache following a head injury or in a pregnant woman.",
+        ),
+        "WHO / NHS public guidance on headache assessment",
+    ),
+    Card(
+        "poisoning", "Suspected poisoning and chemical safety",
+        ("poison", "poisoning", "toxic", "pesticide", "insecticide", "kerosene", "chemical", "zahar", "keetnashak"),
+        (
+            "Any ingestion of poison, agricultural pesticides, kerosene, or overdose of medicines is a critical emergency.",
+            "Do NOT induce vomiting unless specifically instructed by a medical doctor, as vomiting caustic chemicals can burn the food pipe or enter lungs.",
+            "Do not give home remedies, raw eggs, or large volumes of water or salt.",
+            "Keep all agricultural chemicals, pesticides, and medicines in locked containers away from children.",
+        ),
+        (
+            "Take the person to the nearest emergency hospital immediately and bring the bottle, packet, or chemical container along.",
+        ),
+        "WHO / AIIMS National Poisons Information Centre guidance",
     ),
     Card(
         "medicine_safety", "Medicine safety",
