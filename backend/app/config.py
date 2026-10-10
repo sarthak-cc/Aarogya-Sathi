@@ -44,6 +44,7 @@ class Settings:
     sarvam_translate_model: str = field(default_factory=lambda: _env("SARVAM_TRANSLATE_MODEL", "sarvam-translate:v1"))
     sarvam_tts_model: str = field(default_factory=lambda: _env("SARVAM_TTS_MODEL", "bulbul:v3"))
     sarvam_tts_speaker: str = field(default_factory=lambda: _env("SARVAM_TTS_SPEAKER", "priya"))
+    sarvam_voice_id: str = field(default_factory=lambda: _env("SARVAM_VOICE_ID"))
 
     # Groq Whisper as a second speech-to-text option (en/hi/bn/ne). Uses the Groq key.
     groq_api_key: str = field(default_factory=lambda: _env("GROQ_API_KEY") or _env("LLM_API_KEY"))
@@ -75,6 +76,10 @@ class Settings:
         return bool(self.sarvam_api_key)
 
     @property
+    def has_sarvam_voice_clone(self) -> bool:
+        return bool(self.sarvam_api_key and self.sarvam_voice_id)
+
+    @property
     def has_groq_stt(self) -> bool:
         # The LLM key only doubles as a Whisper key when the LLM itself is Groq.
         return bool(_env("GROQ_API_KEY")) or (bool(self.llm_api_key) and "groq.com" in self.llm_base_url)
@@ -98,7 +103,9 @@ class Settings:
             "translation": {"configured": self.has_sarvam,
                             "needs": None if self.has_sarvam else "Set SARVAM_API_KEY. Without it only English works."},
             "text_to_speech": {"configured": self.has_sarvam or bool(self.mms_langs) or self.has_parler,
-                               "providers": [p for p, ok in (("sarvam-bulbul", self.has_sarvam), ("mms", bool(self.mms_langs)),
+                               "providers": [p for p, ok in (("sarvam-bulbul", self.has_sarvam),
+                                                             ("sarvam-clone", self.has_sarvam_voice_clone),
+                                                             ("mms", bool(self.mms_langs)),
                                                              ("parler", self.has_parler)) if ok]},
             "maps": {"configured": self.osm_enabled, "source": "OpenStreetMap" if self.osm_enabled else None},
         }

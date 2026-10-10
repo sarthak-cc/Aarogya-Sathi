@@ -74,3 +74,53 @@ def test_health_reports_configuration_without_secrets(client, live):
     assert "test-groq" not in body and "test-sarvam" not in body
     p = client.get("/api/health").json()["providers"]
     assert p["llm"]["configured"] and p["llm"]["model"] == "openai/gpt-oss-120b"
+
+
+def test_assamese_answer_with_cloned_voice_configured(client, live, monkeypatch):
+    configure(monkeypatch, LLM_API_KEY="test-groq", SARVAM_API_KEY="test-sarvam", SARVAM_VOICE_ID="test-voice-id")
+    live.on("/chat/completions", llm_reply("TRIAGE: ROUTINE\nRest and drink fluids."))
+
+    # Check language capability reports voice
+    langs = {l["code"]: l for l in client.get("/api/languages").json()["languages"]}
+    assert langs["as-IN"]["status"] == "voice"
+    assert langs["as-IN"]["speech_output"] == ["sarvam-clone"]
+
+    # Ask Assamese question
+    cid = client.post("/api/conversations", json={"language": "as-IN"}).json()["id"]
+    t = client.post(f"/api/conversations/{cid}/ask", json={"text": "মোৰ মূৰ বিষাইছে"}).json()
+    assert t["answer"]["lang"] == "as-IN"
+    assert t["voice"]["audio_url"] is not None
+    assert t["voice"]["provider"] == "sarvam voice clone"
+    assert t["voice"]["note"] is None
+
+    # Verify /voices/clone was called with the voice_id and as-IN
+    clone_calls = [c for c in live.calls if c.url.path.endswith("/voices/clone")]
+    assert len(clone_calls) == 1
+    assert b"test-voice-id" in clone_calls[0].content
+    assert b"as-IN" in clone_calls[0].content
+
+    # Verify audio endpoint serves the synthesized bytes
+    audio_res = client.get(t["voice"]["audio_url"])
+    assert audio_res.status_code == 200
+    assert audio_res.content == b"RIFFfakeclone"
+    assert audio_res.headers["content-type"] == "audio/wav"
+
+
+def test_assamese_cloned_voice_api_failure_handled_gracefully(client, live, monkeypatch):
+    configure(monkeypatch, LLM_API_KEY="test-groq", SARVAM_API_KEY="test-sarvam", SARVAM_VOICE_ID="test-voice-id")
+    live.on("/chat/completions", llm_reply("TRIAGE: ROUTINE\nRest."))
+    live.on("/voices/clone", httpx.Response(500, json={"error": "internal error"}))
+
+    cid = client.post("/api/conversations", json={"language": "as-IN"}).json()["id"]
+    t = client.post(f"/api/conversations/{cid}/ask", json={"text": "মোৰ মূৰ বিষাইছে"}).json()
+    assert t["answer"]["lang"] == "as-IN"
+    assert t["voice"]["audio_url"] is None
+    assert t["voice"]["error"]["kind"] == "unavailable"
+    assert "not reachable" in t["voice"]["note"]
+
+
+def test_api_speak_assamese_with_cloned_voice(client, live, monkeypatch):
+    configure(monkeypatch, LLM_API_KEY="test-groq", SARVAM_API_KEY="test-sarvam", SARVAM_VOICE_ID="test-voice-id")
+    res = client.post("/api/speak", json={"text": "নমস্কাৰ", "lang": "as-IN"}).json()
+    assert res["audio_url"] is not None
+    assert res["provider"] == "sarvam voice clone"

@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from app import config, facilities, main, sessions
 from app.providers import translate
 
-KEYS = ["SARVAM_API_KEY", "LLM_API_KEY", "GROQ_API_KEY", "PARLER_TTS_URL", "MMS_TTS_LANGS"]
+KEYS = ["SARVAM_API_KEY", "LLM_API_KEY", "GROQ_API_KEY", "PARLER_TTS_URL", "MMS_TTS_LANGS", "SARVAM_VOICE_ID"]
 
 
 @pytest.fixture(autouse=True)
@@ -89,9 +89,13 @@ def fake_tts(_request):
     return httpx.Response(200, json={"audios": [base64.b64encode(b"RIFFfake").decode()]})
 
 
+def fake_clone(_request):
+    return httpx.Response(200, json={"audio": base64.b64encode(b"RIFFfakeclone").decode(), "audio_duration": 2.5})
+
+
 @pytest.fixture
 def live(monkeypatch, http):
     """Groq + Sarvam 'configured' with mocked responses."""
     configure(monkeypatch, LLM_API_KEY="test-groq", SARVAM_API_KEY="test-sarvam")
-    http.on("/translate", fake_translate).on("/text-to-speech", fake_tts)
+    http.on("/translate", fake_translate).on("/text-to-speech", fake_tts).on("/voices/clone", fake_clone)
     return http

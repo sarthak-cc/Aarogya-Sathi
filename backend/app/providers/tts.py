@@ -1,6 +1,7 @@
 """Text-to-speech.
 
 * Sarvam Bulbul: Hindi, Bengali, English (and other languages outside the NE).
+* Sarvam Voice Cloning: Assamese (as-IN) using a cloned voice (SARVAM_VOICE_ID).
 * MMS-TTS: Meta's open-source per-language voices run locally on CPU. Optional;
   covers Assamese and Nepali, which Bulbul does not. Licence CC-BY-NC 4.0.
 * Parler: self-hosted AI4Bharat Indic Parler-TTS on a GPU (tts_server/).
@@ -25,6 +26,8 @@ def available(lang_code: str) -> list[str]:
     if not lang:
         return []
     out = []
+    if "sarvam-clone" in lang.tts and s.has_sarvam_voice_clone:
+        out.append("sarvam-clone")
     if "sarvam" in lang.tts and s.has_sarvam:
         out.append("sarvam")
     if lang_code in s.mms_langs and lang_code in MMS_MODELS:
@@ -44,6 +47,8 @@ async def synthesize(text: str, lang_code: str, pace: float = 0.95) -> tuple[byt
     last: ProviderError | None = None
     for p in providers:  # first configured provider wins; fall through on failure
         try:
+            if p == "sarvam-clone":
+                return await _sarvam_clone(text, lang_code, pace), "audio/wav", "sarvam voice clone"
             if p == "sarvam":
                 return await _sarvam(text, lang_code, pace), "audio/wav", "sarvam bulbul"
             if p == "mms":
@@ -53,6 +58,38 @@ async def synthesize(text: str, lang_code: str, pace: float = 0.95) -> tuple[byt
         except ProviderError as exc:
             last = exc
     raise last  # type: ignore[misc]
+
+
+async def _sarvam_clone(text: str, lang_code: str, pace: float) -> bytes:
+    s = config.settings
+    if not s.sarvam_api_key:
+        raise ProviderError("Sarvam cloned voice", "not_configured", "SARVAM_API_KEY is not set")
+    if not s.sarvam_voice_id:
+        raise ProviderError("Sarvam cloned voice", "not_configured", "SARVAM_VOICE_ID is not set")
+
+    clipped_text = text.strip()[:1000]
+    if not clipped_text:
+        raise ProviderError("Sarvam cloned voice", "bad_response", "nothing to speak")
+
+    form_data = {
+        "voice_id": s.sarvam_voice_id,
+        "text": clipped_text,
+        "language_code": lang_code,
+        "output_audio_codec": "wav",
+        "pace": str(pace),
+    }
+
+    resp = await send("Sarvam cloned voice", "POST", f"{s.sarvam_base_url}/voices/clone",
+                      headers={"api-subscription-key": s.sarvam_api_key},
+                      data=form_data)
+    data = json_of(resp, "Sarvam cloned voice")
+    audio_b64 = data.get("audio") if isinstance(data, dict) else None
+    if not audio_b64:
+        raise ProviderError("Sarvam cloned voice", "bad_response", "no audio")
+    try:
+        return base64.b64decode(audio_b64)
+    except ValueError as exc:
+        raise ProviderError("Sarvam cloned voice", "bad_response", "bad base64") from exc
 
 
 async def _sarvam(text: str, lang_code: str, pace: float) -> bytes:
