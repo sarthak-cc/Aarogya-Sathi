@@ -1,0 +1,76 @@
+name,state,lat,lon,pin_prefix,aliases,pins
+Guwahati,Assam,26.1445,91.7362,781,গুৱাহাটী|গুয়াহাটি|गुवाहाटी|gauhati|dispur,781001|781008|781003
+Palashbari,Assam,26.123,91.54,,পলাশবাৰী,781128
+Sonapur,Assam,26.115,91.975,,সোণাপুৰ,782402
+Narengi,Assam,26.18,91.825,,নাৰেংগী,781026
+Noonmati,Assam,26.19,91.805,,নুনমাটি,781020
+Bamunimaidam,Assam,26.185,91.795,,বামুণীমৈদাম,781021
+Basistha,Assam,26.11,91.8,,বশিষ্ঠ,781029
+Khanapara,Assam,26.121,91.825,,খানাপাৰা,781022
+Six Mile,Assam,26.133,91.81,,ছয় মাইল|6 mile,781022
+Beltola,Assam,26.122,91.8,,বেলতলা,781028
+Dispur,Assam,26.143,91.79,,দিছপুৰ|दिसपुर,781006
+Ganeshguri,Assam,26.148,91.788,,গণেশগুৰি,781006
+Hatigaon,Assam,26.13,91.78,,হাতীগাঁও,781038
+Lokhra,Assam,26.111,91.755,,লোখৰা,781040
+Lalganesh,Assam,26.125,91.735,,লালগণেশ|lal ganesh|odalbakra,781034
+Bhangagarh,Assam,26.157,91.764,,ভাঙাগড়,781005
+Zoo Road,Assam,26.165,91.78,,চিৰিয়াখানা পথ,781024
+Chandmari,Assam,26.183,91.78,,চান্দমাৰী,
+Paltan Bazar,Assam,26.178,91.755,,পল্টন বজাৰ|paltanbazar|railway station,
+Panbazar,Assam,26.186,91.745,,পানবজাৰ|पानबाजार,
+Changsari,Assam,26.283,91.69,,চাংছাৰি,781101
+North Guwahati,Assam,26.2,91.73,,উত্তৰ গুৱাহাটী,781030
+Amingaon,Assam,26.195,91.695,,আমিনগাঁও,781031
+Azara,Assam,26.11,91.605,,আজাৰা|airport|borjhar,781017
+Boragaon,Assam,26.13,91.675,,বোৰাগাঁও,781033
+Pandu,Assam,26.17,91.68,,পাণ্ডু|पांडु,781012
+Adabari,Assam,26.164,91.71,,আদাবাৰী,781012
+Maligaon,Assam,26.157,91.698,,মালিগাঁও|मालीगांव,781011
+Gauhati University,Assam,26.154,91.662,,গুৱাহাটী বিশ্ববিদ্যালয়|gu campus,
+Assam Engineering College,Assam,26.143,91.66,,aec|assam engineering|অসম অভিযান্ত্ৰিক মহাবিদ্যালয়|অসম ইঞ্জিনিয়াৰিং কলেজ,781013
+Jalukbari,Assam,26.15,91.665,,জালুকবাৰী|जालुकबारी,781014
+Barpeta,Assam,26.3230,91.0060,,বৰপেটা|बारपेटा,
+Nalbari,Assam,26.4440,91.4410,,নলবাৰী|नलबाड़ी,
+Nagaon,Assam,26.3480,92.6838,782,নগাঁও|नगांव|nowgong,
+Morigaon,Assam,26.2520,92.3420,,মৰিগাঁও,
+Hojai,Assam,26.0000,92.8600,,হোজাই,
+Diphu,Assam,25.8430,93.4310,,ডিফু|दीफू,
+Bongaigaon,Assam,26.4831,90.5627,783,বঙাইগাঁও|बोंगाईगांव,
+Dhubri,Assam,26.0207,89.9743,,ধুবুৰী|धुबरी,
+Goalpara,Assam,26.1760,90.6260,,গোৱালপাৰা|गोआलपारा,
+Kokrajhar,Assam,26.4010,90.2710,,কোকৰাঝাৰ|कोकराझार,
+Tezpur,Assam,26.6338,92.8000,784,তেজপুৰ|तेजपुर,
+Mangaldoi,Assam,26.4430,92.0320,,মঙলদৈ,
+Jorhat,Assam,26.7509,94.2037,785,যোৰহাট|जोरहाट,
+Sivasagar,Assam,26.9826,94.6425,,শিৱসাগৰ|शिवसागर|sibsagar,
+Golaghat,Assam,26.5239,93.9623,,গোলাঘাট|गोलाघाट,
+Majuli,Assam,26.9500,94.1700,,মাজুলী|माजुली,
+Dibrugarh,Assam,27.4728,94.9120,786,ডিব্ৰুগড়|ডিব্রুগড়|डिब्रूगढ़,
+Tinsukia,Assam,27.4886,95.3558,,তিনিচুকীয়া|तिनसुकिया,
+North Lakhimpur,Assam,27.2360,94.1030,787,লখিমপুৰ|लखीमपुर|lakhimpur,
+Dhemaji,Assam,27.4800,94.5800,,ধেমাজি|धेमाजी,
+Silchar,Assam,24.8333,92.7789,788,শিলচৰ|শিলচর|सिलचर,
+Karimganj,Assam,24.8649,92.3592,,কৰিমগঞ্জ|করিমগঞ্জ|करीमगंज,
+Haflong,Assam,25.1700,93.0200,,হাফলং|हाफलोंग,
+Shillong,Meghalaya,25.5788,91.8933,793,শিলং|शिलांग,
+Jowai,Meghalaya,25.4500,92.2000,,जोवाई,
+Nongpoh,Meghalaya,25.9000,91.8800,,,
+Tura,Meghalaya,25.5138,90.2172,794,তুৰা|तुरा,
+Imphal,Manipur,24.8170,93.9368,795,ইম্ফল|इंफाल,
+Thoubal,Manipur,24.6400,94.0000,,থৌবাল,
+Churachandpur,Manipur,24.3333,93.6833,,,
+Agartala,Tripura,23.8315,91.2868,799,আগরতলা|आगरतला|अगरतला,
+Udaipur Tripura,Tripura,23.5300,91.4800,,উদয়পুর,
+Dharmanagar,Tripura,24.3700,92.1700,,ধর্মনগর,
+Aizawl,Mizoram,23.7271,92.7176,796,आइजोल,
+Lunglei,Mizoram,22.8800,92.7300,,,
+Kohima,Nagaland,25.6751,94.1086,797,কোহিমা|कोहिमा,
+Dimapur,Nagaland,25.9063,93.7276,,ডিমাপুৰ|दीमापुर,
+Mokokchung,Nagaland,26.3200,94.5100,798,,
+Itanagar,Arunachal Pradesh,27.0844,93.6053,791,ইটানগৰ|ईटानगर,
+Naharlagun,Arunachal Pradesh,27.1040,93.6950,,,
+Pasighat,Arunachal Pradesh,28.0700,95.3300,792,पासीघाट,
+Tawang,Arunachal Pradesh,27.5860,91.8590,790,तवांग,
+Gangtok,Sikkim,27.3389,88.6065,737,গেংটক|गंगटोक,
+Namchi,Sikkim,27.1660,88.3640,,नामची,

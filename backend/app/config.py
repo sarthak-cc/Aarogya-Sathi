@@ -40,13 +40,10 @@ class Settings:
     # Self-hosted AI4Bharat Indic Parler-TTS (see tts_server/), e.g. an ngrok URL
     parler_tts_url: str = field(default_factory=lambda: _env("PARLER_TTS_URL"))
 
-    # Twilio (optional real-phone mode)
-    twilio_auth_token: str = field(default_factory=lambda: _env("TWILIO_AUTH_TOKEN"))
-    twilio_account_sid: str = field(default_factory=lambda: _env("TWILIO_ACCOUNT_SID"))
-    public_base_url: str = field(default_factory=lambda: _env("PUBLIC_BASE_URL"))
-    twilio_validate_signature: bool = field(
-        default_factory=lambda: _env("TWILIO_VALIDATE_SIGNATURE", "true").lower() != "false"
-    )
+
+    # Free OpenStreetMap lookups (Nominatim geocoding + Overpass hospitals). Set OSM_ENABLED=false offline.
+    osm_enabled: bool = field(default_factory=lambda: _env("OSM_ENABLED", "true").lower() != "false")
+    osm_contact: str = field(default_factory=lambda: _env("OSM_CONTACT", "aarogya-saathi-demo"))
 
     http_timeout: float = field(default_factory=lambda: float(_env("HTTP_TIMEOUT", "20")))
     session_ttl_seconds: int = field(default_factory=lambda: int(_env("SESSION_TTL_SECONDS", "1800")))
@@ -67,10 +64,6 @@ class Settings:
     def has_parler(self) -> bool:
         return bool(self.parler_tts_url)
 
-    @property
-    def has_twilio(self) -> bool:
-        return bool(self.twilio_auth_token and self.public_base_url)
-
     def mode_summary(self) -> dict:
         return {
             "stt": "sarvam" if self.has_sarvam else ("groq-whisper" if self.has_groq_stt else "demo (type or browser speech)"),
@@ -78,7 +71,9 @@ class Settings:
             "llm": f"live ({self.llm_model})" if self.has_llm else "demo answers (labelled)",
             "tts_indic": "parler" if self.has_parler else "not configured",
             "tts_hi_bn": "sarvam" if self.has_sarvam else "browser voice if available",
-            "telephony": "twilio" if self.has_twilio else "awaiting configuration (simulator only)",
+            "voice_channel": "web (browser microphone over HTTPS)",
+            "phone_line": "planned: needs a paid telephony provider",
+            "facilities": "seed list + OpenStreetMap" if self.osm_enabled else "seed list only",
         }
 
 

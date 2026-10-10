@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Aarogya Saathi</title>
   <meta name="description" content="Voice health-information line for North East India that works on any phone.">
+  <meta name="theme-color" content="#2E3A48">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Saathi">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Bengali:wght@500;600&family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
@@ -57,7 +64,7 @@
             <button class="key" data-d="1" aria-label="Key 1, ask again">1<small>&nbsp;</small></button>
             <button class="key" data-d="2" aria-label="Key 2, repeat">2<small>abc</small></button>
             <button class="key" data-d="3" aria-label="Key 3, change language">3<small>def</small></button>
-            <button class="key" data-d="4" aria-label="Key 4">4<small>ghi</small></button>
+            <button class="key" data-d="4" aria-label="Key 4, find a hospital">4<small>ghi</small></button>
             <button class="key" data-d="5" aria-label="Key 5, simpler words">5<small>jkl</small></button>
             <button class="key" data-d="6" aria-label="Key 6">6<small>mno</small></button>
             <button class="key" data-d="7" aria-label="Key 7">7<small>pqrs</small></button>
@@ -73,7 +80,7 @@
       </div>
 
       <form class="typebox" id="typeForm" autocomplete="off">
-        <label for="typeInput">Type instead</label>
+        <label for="typeInput" id="typeLabel">Type instead</label>
         <div class="typerow">
           <input id="typeInput" placeholder="e.g. My child has had a cough for two days." disabled>
           <button type="submit" id="typeSend" disabled>Ask</button>
@@ -81,12 +88,12 @@
       </form>
 
       <div class="scenarios" id="scenarios" hidden>
-        <p>Demo questions</p>
+        <p id="scenarioLabel">Demo questions</p>
         <div class="chips" id="scenarioChips"></div>
       </div>
 
       <label class="toggle"><input type="checkbox" id="muteToggle"> Mute tones and voice</label>
-      <p class="kbd-note">Keyboard: 0–9 * #, Enter = Call, Esc = End, hold Space = Speak, arrows = scroll.</p>
+      <p class="kbd-note">Keyboard: 0–9 * #, Enter = Call, Esc = End, hold Space = Speak, arrows = scroll. After an answer, 4 finds a hospital near you.</p>
     </section>
 
     <section class="panel" aria-label="What the system did">
@@ -118,6 +125,9 @@
       </div>
 
       <div class="tab" id="tab-langs" hidden>
+        <h2 class="sub">Channels</h2>
+        <ul class="channels" id="channelRows"></ul>
+        <h2 class="sub">Language coverage</h2>
         <p class="lead">Network coverage: what each language can do on this line right now. Honest gaps are listed so nobody is promised a voice conversation that cannot happen.</p>
         <table class="langs">
           <thead><tr><th>Language</th><th>Key</th><th>Signal</th><th>Hear</th><th>Speak</th></tr></thead>

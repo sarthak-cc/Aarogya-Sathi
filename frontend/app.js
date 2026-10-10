@@ -9,18 +9,18 @@
     up: $("arrowUp"), down: $("arrowDown"), softLLabel: $("softLLabel"), softRLabel: $("softRLabel"),
     softL: $("softL"), softR: $("softR"), navUp: $("navUp"), navDown: $("navDown"),
     call: $("callBtn"), end: $("endBtn"), keypad: $("keypad"), phone: $("phone"), wrap: $("phoneWrap"),
-    typeForm: $("typeForm"), typeInput: $("typeInput"), typeSend: $("typeSend"),
-    scenarios: $("scenarios"), chips: $("scenarioChips"), mute: $("muteToggle"),
+    typeForm: $("typeForm"), typeInput: $("typeInput"), typeSend: $("typeSend"), typeLabel: $("typeLabel"),
+    scenarios: $("scenarios"), chips: $("scenarioChips"), scenarioLabel: $("scenarioLabel"), channelRows: $("channelRows"), mute: $("muteToggle"),
     turns: $("turns"), convoEmpty: $("convoEmpty"), slip: $("slip"), slipEmpty: $("slipEmpty"),
     langRows: $("langRows"), lookupForm: $("lookupForm"), lookupInput: $("lookupInput"), lookupMsg: $("lookupMsg"),
   };
 
   const S = {
     callId: null,
-    phase: "idle", // idle | calling | language | ready | confirming | answered | emergency | consent | ended
+    phase: "idle", // idle | calling | language | ready | confirming | answered | emergency | location | help | consent | ended
     view: "main",  // main | menu | notice  (sub-screens reached with the right softkey)
     lang: null, prevPhase: null, languages: [], scenarios: [], lastTurn: null, health: null,
-    askPrompt: null, menuSel: 0, startedAt: 0, busy: false,
+    askPrompt: null, menuSel: 0, startedAt: 0, busy: false, help: null, pinBuf: "",
   };
 
   const SCRIPT_ATTR = { "as-IN": "as", "bn-IN": "bn", "mni-IN": "mni", "hi-IN": "hi", "brx-IN": "brx", "ne-IN": "ne", "en-IN": "en" };
@@ -30,6 +30,19 @@
     llm: "Live AI, grounded on vetted cards", demo: "Demo answer (scripted)", card_fallback: "Vetted card text (AI not available)",
     emergency: "Emergency script, AI skipped", crisis: "Crisis script, AI skipped",
   };
+  // Extra demo questions for the safety features (served alongside the backend's scripted scenarios).
+  const EXTRA_SCENARIOS = [
+    { title: "Heart attack signs (emergency)", questions: {
+      "en-IN": "My father has severe chest pain and is sweating a lot.",
+      "hi-IN": "मेरे पिता के सीने में दर्द है और बहुत पसीना आ रहा है।",
+      "as-IN": "মোৰ দেউতাৰ বুকুৰ বিষ হৈছে আৰু বহুত ঘাম ওলাইছে।" } },
+    { title: "Asks for a medicine dose", questions: {
+      "en-IN": "Which medicine and how many tablets should I take for fever?",
+      "hi-IN": "बुखार के लिए कौन सी दवा और कितनी गोली लूँ?",
+      "as-IN": "জ্বৰৰ বাবে কোনটো ঔষধ কিমান টেবলেট খাম?" } },
+  ];
+  const LOCATION_CHIPS = ["Assam Engineering College, Jalukbari", "781014", "Maligaon", "Dispur", "Dibrugarh"];
+
   const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- API ----------
@@ -137,7 +150,9 @@
       case "ready": return setSoftkeys(S.recording ? "Release" : "Speak", "Type");
       case "confirming": case "consent": return setSoftkeys("Yes", "No");
       case "answered": return setSoftkeys("Again", sub ? "Back" : "Menu");
-      case "emergency": return setSoftkeys(S.lastTurn && S.lastTurn.triage.level === "crisis" ? "Call 14416" : "Call 112", sub ? "Back" : "Menu");
+      case "emergency": return setSoftkeys(S.lastTurn && S.lastTurn.triage.level === "crisis" ? "Call 14416" : "Call 112", sub ? "Back" : "Hospital");
+      case "location": return setSoftkeys(S.recording ? "Release" : "GPS", "Back");
+      case "help": return setSoftkeys(sub ? "" : "Call 108", "Back");
       default: return setSoftkeys("", "");
     }
   }
@@ -238,6 +253,35 @@
     lcd({ html: heading(title), type: text, mode });
     softkeysForState();
   }
+  function screenLocation(extra = "") {
+    S.view = "main";
+    const p = (S.lastTurn && S.lastTurn.location_prompt) || { text: "Where are you? Say or type your village, town, PIN code or a landmark, or press GPS.", lang: "en-IN" };
+    const pin = S.pinBuf ? line(`PIN: ${S.pinBuf.padEnd(6, "_")}`) : "";
+    lcd({ html: heading("Where are you?") + pin + (extra ? line(extra) : ""), type: S.pinBuf ? null : p.text, lang: p.lang });
+    softkeysForState();
+    return p;
+  }
+  function shortName(n) {
+    return n.replace(/\s*\(.*?\)/g, "").replace(/ Medical College( and Hospital)?/, " MC").replace(/ and Hospital/, "").slice(0, 16);
+  }
+  function screenHelp(r) {
+    S.view = "main";
+    const emergency = S.prevPhase === "emergency";
+    const list = [r.nearest, ...r.facilities.filter((f) => r.nearest && f.id !== r.nearest.id)].filter(Boolean).slice(0, 3);
+    // Row 1 is the suggested emergency stop (24x7 expected), so it can be further than a clinic below it.
+    const rows = list.map((f, i) => `<li><b>${i + 1}</b>${f.distance_km}km ${i === 0 ? "*" : ""}${esc(shortName(f.name))}</li>`).join("");
+    const head = emergency ? `<div class="inv">${pix("alert")}<span>Nearest help</span></div>` : heading("Nearest help");
+    lcd({ html: `${head}<ul class="menu">${rows}</ul>${line("* 24x7 expected")}${line("108 ambulance · 112")}${line("Not contacted.")}`, mode: emergency ? "emergency" : "" });
+    softkeysForState();
+  }
+  function screenFacility(f) {
+    S.view = "notice";
+    const bits = [`${f.distance_km} km (straight line)`, f.district ? `${f.district}, ${f.state}` : null,
+      f.phone ? `Phone ${f.phone}` : "No checked phone yet", f.verified ? "Verified" : "Not verified"].filter(Boolean);
+    lcd({ html: heading(shortName(f.name)), type: bits.join("\n") });
+    softkeysForState();
+  }
+
   function screenEnded(slip) {
     const secs = Math.round((Date.now() - S.startedAt) / 1000);
     const dur = [Math.floor(secs / 3600), Math.floor(secs / 60) % 60, secs % 60].map((n) => String(n).padStart(2, "0")).join(":");
@@ -316,8 +360,10 @@
   // ---------- controls outside the handset ----------
   function setControls() {
     const inCall = !!S.callId && !["ended", "idle", "calling"].includes(S.phase);
-    const canAsk = inCall && ["ready", "answered", "emergency"].includes(S.phase) && !S.busy;
+    const canAsk = inCall && ["ready", "answered", "emergency", "location"].includes(S.phase) && !S.busy;
     el.typeInput.disabled = el.typeSend.disabled = !canAsk;
+    el.typeInput.placeholder = S.phase === "location" ? "Village, town, PIN code or landmark" : "e.g. My child has had a cough for two days.";
+    el.typeLabel.textContent = S.phase === "location" ? "Type your location" : "Type instead";
     el.scenarios.hidden = !canAsk;
     if (canAsk) renderScenarioChips();
     softkeysForState();
@@ -393,6 +439,16 @@
     S.busy = true; setControls();
     screenThinking("Hearing");
     const fd = new FormData(); fd.append("audio", blob, "question.webm");
+    if (S.phase === "location") {
+      fd.append("purpose", "location");
+      try {
+        const r = await post(`/api/calls/${S.callId}/transcribe`, fd);
+        S.busy = false;
+        if (r.ok && r.transcript) return submitLocation({ text: r.transcript });
+        screenLocation("Could not hear. Try again or type it.");
+      } catch (e) { S.busy = false; screenLocation(e.message); }
+      return setControls();
+    }
     try {
       const r = await post(`/api/calls/${S.callId}/transcribe`, fd);
       S.busy = false;
@@ -479,6 +535,55 @@
     setControls();
   }
 
+  // ---------- location + nearby help ----------
+  function goLocation() {
+    if (!S.callId) return;
+    stopAudio();
+    if (!["location", "help"].includes(S.phase)) S.prevPhase = S.phase;
+    S.phase = "location"; S.pinBuf = "";
+    const p = screenLocation();
+    say(p.text, p.lang);
+    setControls();
+  }
+  function backFromLocation() {
+    stopAudio();
+    S.phase = S.prevPhase && S.lastTurn ? S.prevPhase : "ready";
+    S.prevPhase = null; S.pinBuf = "";
+    if (S.lastTurn && S.phase !== "ready") screenAnswer(S.lastTurn, { animate: false }); else screenReady();
+    setControls();
+  }
+  function useGps() {
+    if (!navigator.geolocation) return screenLocation("No GPS here. Say or type a place.");
+    screenThinking("Getting GPS");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => submitLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy_m: Math.round(pos.coords.accuracy) }),
+      () => { if (S.phase === "location") screenLocation("Location is off. Say or type a place."); },
+      { timeout: 10000, maximumAge: 60000 },
+    );
+  }
+  async function submitLocation(body) {
+    if (!S.callId) return;
+    S.busy = true; setControls();
+    screenThinking("Searching");
+    try {
+      const r = await post(`/api/calls/${S.callId}/location`, body);
+      S.busy = false; S.pinBuf = "";
+      if (!r.ok) {
+        S.phase = "location";
+        lcd({ html: heading("Not found"), type: r.prompt.text, lang: r.prompt.lang });
+        say(r.prompt.text, r.prompt.lang, r.voice);
+        return setControls();
+      }
+      S.phase = "help"; S.help = r;
+      screenHelp(r);
+      sfx.blip();
+      say(r.prompt.text, r.prompt.lang, r.voice);
+      el.convoEmpty.hidden = true;
+      el.turns.prepend(helpElement(r));
+    } catch (e) { S.busy = false; S.phase = "location"; screenText("Try again", e.message); }
+    setControls();
+  }
+
   /** END key: a real phone hangs up; the screen shrinks to a line and goes off. */
   async function hangUp() {
     if (!S.callId) {
@@ -506,7 +611,23 @@
       case "confirming": if (d === "1") return confirm(true); if (d === "2") return confirm(false); return;
       case "consent": if (d === "1") return endCall(true); if (d === "2") return endCall(false); return;
       case "ready": if (d === "0") return S.lastTurn ? screenMenu() : screenReady(); return;
+      case "location":  // a keypad caller can type their PIN code
+        if (d === "*") { S.pinBuf = ""; return screenLocation(); }
+        if (/\d/.test(d) && S.pinBuf.length < 6) {
+          S.pinBuf += d; screenLocation();
+          if (S.pinBuf.length === 6) submitLocation({ text: S.pinBuf });
+        }
+        return;
+      case "help": {
+        const list = [S.help.nearest, ...S.help.facilities.filter((f) => S.help.nearest && f.id !== S.help.nearest.id)].filter(Boolean);
+        const n = Number(d);
+        if (n >= 1 && n <= Math.min(3, list.length)) return screenFacility(list[n - 1]);
+        if (d === "9") return askConsent();
+        if (d === "4") return goLocation();
+        return;
+      }
       case "answered": case "emergency":
+        if (d === "4") return goLocation();
         if (d === "1") { stopAudio(); S.phase = "ready"; screenReady(); return setControls(); }
         if (d === "2") return repeat();
         if (d === "5") return simpler();
@@ -528,6 +649,8 @@
         const n = S.lastTurn && S.lastTurn.triage.level === "crisis" ? "14416" : "112";
         return screenNotice(`Call ${n}`, `In a real phone, this dials ${n}.`, n === "112" ? "emergency" : "");
       }
+      case "location": return useGps();
+      case "help": if (S.view === "main") screenNotice("Call 108", "In a real phone, this dials 108. This demo never places a call."); return;
       default: wake();
     }
   }
@@ -537,6 +660,7 @@
     if (S.busy) return;
     if (S.view !== "main") {
       if (S.phase === "idle") return screenIdle();
+      if (S.phase === "help") return screenHelp(S.help);
       if (S.lastTurn && ["answered", "emergency"].includes(S.phase)) return screenAnswer(S.lastTurn, { animate: false });
       S.view = "main"; softkeysForState(); return;
     }
@@ -548,7 +672,9 @@
       case "ready": return el.typeInput.focus();
       case "confirming": return confirm(false);
       case "consent": return endCall(false);
-      case "answered": case "emergency": return screenMenu();
+      case "answered": return screenMenu();
+      case "emergency": return S.lastTurn.triage.level === "crisis" ? screenMenu() : goLocation();
+      case "location": case "help": return backFromLocation();
     }
   }
 
@@ -584,6 +710,7 @@
     screenAnswer(turn);
     if (turn.triage.level === "emergency") sfx.alert(); else sfx.blip();
     say(turn.answer.text, turn.answer.lang, turn.voice, true);
+    if (turn.triage.level === "emergency" && turn.location_prompt) say(turn.location_prompt.text, turn.location_prompt.lang);
     el.convoEmpty.hidden = true;
     el.turns.prepend(turnElement(turn));
     setControls();
@@ -616,6 +743,8 @@
         <p class="said-meta">${t.english && S.lang !== "en-IN" ? `English used for reasoning: ${esc(t.english)} <small>(${esc(t.english_source)})</small>` : (S.lang === "en-IN" ? "" : "No translator configured and not a demo question, so the safety check ran on the original words only.")}</p>
       </div>
       <div class="flag ${lvl}"><b>${esc(flagText)}</b>${matches ? `<br>Matched: ${esc(matches)}` : ""}</div>
+      ${t.medicine && t.medicine.request ? `<div class="flag med"><b>Medicine safety:</b> the caller asked which medicine or how much to take. Aarogya Saathi does not prescribe or give doses; it explains general precautions and refers to a doctor, nurse or pharmacist.${t.medicine.dose_blocked ? " <b>The AI draft named a dose, so it was blocked</b> and the vetted card text was used." : ""}</div>` : ""}
+      ${lvl === "emergency" ? `<div class="answer-actions"><button type="button" class="find-help" data-act="find">Find nearest hospital</button><button type="button" data-act="gps">Share my location</button></div>` : ""}
       <div>
         <p style="margin:0 0 .35rem"><span class="source ${esc(baseSource)}">${esc(sourceLabel)}</span>${t.level === "simple" ? '<span class="source">Simpler words</span>' : ""}</p>
         <p class="answer" lang="${langAttr(t.answer.lang)}">${esc(t.answer.text)}</p>
@@ -633,9 +762,45 @@
         ${lvl === "emergency" || lvl === "crisis" ? "" : '<button type="button" data-act="simpler">Explain more simply</button>'}
       </div>`;
     li.querySelector('[data-act="repeat"]').onclick = () => { stopAudio(); screenAnswer(t, { animate: false }); say(t.answer.text, t.answer.lang, t.voice, true); };
+    const find = li.querySelector('[data-act="find"]');
+    if (find) find.onclick = () => S.callId && goLocation();
+    const gps = li.querySelector('[data-act="gps"]');
+    if (gps) gps.onclick = () => { if (!S.callId) return; if (S.phase !== "location") goLocation(); useGps(); };
     const simp = li.querySelector('[data-act="simpler"]');
     if (simp) simp.onclick = () => S.callId && ["answered", "ready"].includes(S.phase) && simpler();
     return li;
+  }
+
+  function facilityItem(f, nearest) {
+    return `<li class="facility${nearest ? " nearest" : ""}">
+      <p class="fac-name"><b>${esc(f.name)}</b> <span class="km">${f.distance_km} km</span>${nearest ? ' <span class="source">Suggested first</span>' : ""}</p>
+      <p class="fac-meta">${[f.district, f.state].filter(Boolean).map(esc).join(", ")}${f.capabilities ? ` · ${esc(f.capabilities)}` : ""}</p>
+      <p class="fac-meta"><span class="verify ${f.verified ? "ok" : "no"}">${esc(f.verification)}</span>
+        ${f.phone ? ` · Phone ${esc(f.phone)}` : ""} · <a href="${esc(f.map_url)}" target="_blank" rel="noopener">Map</a></p>
+      ${f.notes ? `<p class="fac-meta">${esc(f.notes)}</p>` : ""}
+    </li>`;
+  }
+
+  function helpElement(r) {
+    const li = document.createElement("li");
+    li.className = "turn help";
+    const where = r.place ? `${esc(r.place.name)} <small>(${esc(r.place.method)}${r.place.approximate ? ", approximate" : ""})</small>` : "";
+    li.innerHTML = `
+      <p class="turn-time" style="margin:0">${timeStamp()} · NEAREST HELP</p>
+      <div class="notice"><b>${esc(r.notice)}</b></div>
+      <p style="margin:0">Location: ${where}</p>
+      <ul class="numbers">${r.emergency_numbers.map((n) => `<li><span class="num">${esc(n.number)}</span>${esc(n.label)}</li>`).join("")}</ul>
+      <div><p class="cards" style="margin:0 0 .4rem">Listed facilities (seed list, ${r.facilities.length} nearest)</p>
+        <ol class="facilities">${[r.nearest, ...r.facilities.filter((f) => !r.nearest || f.id !== r.nearest.id)].filter(Boolean)
+          .filter((f, i, a) => a.findIndex((x) => x.id === f.id) === i).map((f, i) => facilityItem(f, i === 0)).join("")}</ol></div>
+      ${r.osm_facilities.length ? `<div><p class="cards" style="margin:0 0 .4rem">Also on OpenStreetMap (community data, not verified)</p>
+        <ol class="facilities">${r.osm_facilities.map((f) => facilityItem(f, false)).join("")}</ol></div>` : ""}
+      <p class="voice-note">${esc(r.distance_note)}</p>`;
+    return li;
+  }
+
+  function renderChannels(list) {
+    el.channelRows.innerHTML = list.map((c) => `<li><span class="pill ${c.status.replace(" ", "-")}">${esc(c.status)}</span><b>${esc(c.name)}</b><small>${esc(c.detail)}</small></li>`).join("");
   }
 
   function renderSlip(slip) {
@@ -690,7 +855,17 @@
 
   function renderScenarioChips() {
     el.chips.innerHTML = "";
-    S.scenarios.forEach((sc) => {
+    el.scenarioLabel.textContent = S.phase === "location" ? "Demo locations" : "Demo questions";
+    if (S.phase === "location") {
+      LOCATION_CHIPS.forEach((place) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "chip"; b.textContent = place;
+        b.onclick = () => submitLocation({ text: place });
+        el.chips.appendChild(b);
+      });
+      return;
+    }
+    [...S.scenarios, ...EXTRA_SCENARIOS].forEach((sc) => {
       const q = sc.questions[S.lang] || sc.questions["en-IN"];
       const b = document.createElement("button");
       b.type = "button";
@@ -709,7 +884,7 @@
 
   // ---------- microphone (hold Speak) ----------
   let recorder = null, chunks = [], recognition = null;
-  const canSpeak = () => S.callId && !S.busy && ["ready", "answered", "emergency"].includes(S.phase);
+  const canSpeak = () => S.callId && !S.busy && ["ready", "answered", "emergency", "location"].includes(S.phase);
   function setRecording(on) {
     S.recording = on;
     el.rec.hidden = !on;
@@ -718,7 +893,7 @@
   async function startRecording() {
     if (!canSpeak() || S.recording) return;
     stopAudio();
-    S.phase = "ready";
+    if (S.phase !== "location") S.phase = "ready";
     const sttLive = S.health && !/demo/.test(S.health.providers.stt);
     if (!sttLive) return startBrowserRecognition();
     setRecording(true);
@@ -741,6 +916,7 @@
     setRecording(false);
     if (recorder && recorder.state === "recording") recorder.stop();
     else if (recognition) recognition.stop();
+    else if (S.phase === "location") screenLocation();
     else screenReady();
   }
   function startBrowserRecognition() {
@@ -754,9 +930,14 @@
     recognition = new SR();
     recognition.lang = meta.browser_voice;
     recognition.interimResults = false;
-    recognition.onresult = (e) => { const t = e.results[0][0].transcript; recognition = null; askText(t, true); };
+    recognition.onresult = (e) => {
+      const t = e.results[0][0].transcript; recognition = null; setRecording(false);
+      if (S.phase === "location") submitLocation({ text: t }); else askText(t, true);
+    };
     recognition.onerror = () => { recognition = null; setRecording(false); screenText("Could not hear", "Please try again, or type the question."); };
-    recognition.onend = () => { if (recognition) { recognition = null; setRecording(false); if (S.phase === "ready" && !S.busy) screenReady(); } };
+    recognition.onend = () => {
+      if (recognition) { recognition = null; setRecording(false); if (S.phase === "ready" && !S.busy) screenReady(); else if (S.phase === "location" && !S.busy) screenLocation(); }
+    };
     recognition.start();
     setRecording(true);
     screenListening();
@@ -804,7 +985,12 @@
   document.addEventListener("keyup", (e) => { if (e.key === " " && S.recording && e.target.tagName !== "INPUT") { e.preventDefault(); stopRecording(); } });
   document.addEventListener("pointerdown", () => wake(), { passive: true });
 
-  el.typeForm.onsubmit = (e) => { e.preventDefault(); const t = el.typeInput.value; el.typeInput.value = ""; askText(t); };
+  el.typeForm.onsubmit = (e) => {
+    e.preventDefault();
+    const t = el.typeInput.value.trim(); el.typeInput.value = "";
+    if (!t) return;
+    if (S.phase === "location") submitLocation({ text: t }); else askText(t);
+  };
   el.mute.onchange = () => el.mute.checked && stopAudio();
   document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => switchTab(b.dataset.tab)));
   el.lookupForm.onsubmit = async (e) => {
@@ -834,13 +1020,14 @@
   setInterval(() => { if (S.phase === "idle" && S.view === "main") screenIdle(); }, 30000);
   (async () => {
     try {
-      const [health, langs, scen] = await Promise.all([api("/api/health"), api("/api/languages"), api("/api/scenarios")]);
+      const [health, langs, scen, ch] = await Promise.all([api("/api/health"), api("/api/languages"), api("/api/scenarios"), api("/api/channels")]);
+      renderChannels(ch.channels);
       S.health = health; S.languages = langs.languages; S.scenarios = scen.scenarios;
       const p = health.providers;
       const live = !/demo/.test(p.llm);
       el.mode.innerHTML = live
-        ? `<strong>Live AI</strong> using ${esc(p.llm)}, speech by ${esc(p.stt)}`
-        : `<strong>Demo mode</strong>: scripted answers in English, Hindi and Assamese. Add API keys in .env for live AI.`;
+        ? `<strong>Live AI</strong> using ${esc(p.llm)}, speech by ${esc(p.stt)} · Web voice live · Phone line planned`
+        : `<strong>Demo mode</strong>: scripted answers in English, Hindi and Assamese. Add API keys for live AI. · Web voice live · Phone line planned`;
       renderLanguages();
       if (window.speechSynthesis) speechSynthesis.getVoices();
     } catch (e) {

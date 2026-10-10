@@ -15,7 +15,12 @@ EN: dict[str, str] = {
     "ask_question": "Please say your health question. Pause when you are done.",
     "readback": "I heard: {text}. Press 1 if this is right. Press 2 to say it again.",
     "not_heard": "Sorry, I could not hear that clearly. Please say it again.",
-    "after_answer": "Press 1 for another question. Press 2 to hear the answer again. Press 5 to hear it in simpler words. Press 3 to change language. Press 9 to end the call.",
+    "after_answer": "Press 1 for another question. Press 2 to hear the answer again. Press 5 to hear it in simpler words. Press 3 to change language. Press 4 to find a hospital near you. Press 9 to end the call.",
+    "emergency_menu": "Press 4 to find the nearest hospital. Press 2 to hear this again. Press 9 to end the call.",
+    "ask_location": "Where are you? Say your village, town, PIN code or a nearby landmark, or share your phone's location.",
+    "location_not_found": "I could not find that place. Please say a nearby town or your PIN code. If this is an emergency, call 112 now.",
+    "facility_found": "The nearest listed hospital is {name}, about {km} kilometres away in a straight line. I have not contacted the hospital. Call 108 for an ambulance or 112 for emergency help.",
+    "medicine_refusal": "I cannot tell you which medicine to take or how much. A doctor, nurse or pharmacist must decide that after seeing you.",
     "emergency": "This may be an emergency. Please get medical help now. Call 112, or ask someone near you to take you to the nearest hospital. Do not wait.",
     "crisis": "You matter, and help is available right now. Please call Tele-MANAS on 14416, or 112 if you are in danger. If you can, stay with someone you trust.",
     "consent_slip": "Would you like a short summary slip of this call to show your ASHA worker or doctor? Press 1 for yes, 2 for no.",
@@ -44,7 +49,12 @@ HAND: dict[str, dict[str, str]] = {
         "ask_question": "अपना स्वास्थ्य सवाल बोलिए। बोलने के बाद रुकिए।",
         "readback": "मैंने सुना: {text}। सही है तो 1 दबाइए, दोबारा बोलने के लिए 2 दबाइए।",
         "not_heard": "माफ़ कीजिए, मैं ठीक से सुन नहीं पाया। कृपया दोबारा बोलिए।",
-        "after_answer": "एक और सवाल के लिए 1 दबाइए। जवाब दोबारा सुनने के लिए 2। और आसान भाषा में सुनने के लिए 5। भाषा बदलने के लिए 3। कॉल खत्म करने के लिए 9।",
+        "after_answer": "एक और सवाल के लिए 1 दबाइए। जवाब दोबारा सुनने के लिए 2। और आसान भाषा में सुनने के लिए 5। भाषा बदलने के लिए 3। पास का अस्पताल ढूँढने के लिए 4। कॉल खत्म करने के लिए 9।",
+        "emergency_menu": "पास का अस्पताल ढूँढने के लिए 4 दबाइए। यह संदेश दोबारा सुनने के लिए 2। कॉल खत्म करने के लिए 9।",
+        "ask_location": "आप कहाँ हैं? अपना गाँव, शहर, पिन कोड या पास की कोई पहचान वाली जगह बताइए, या फ़ोन की लोकेशन साझा कीजिए।",
+        "location_not_found": "मुझे वह जगह नहीं मिली। पास का कोई शहर या पिन कोड बताइए। आपातकाल हो तो अभी 112 पर कॉल करें।",
+        "facility_found": "सबसे पास का सूचीबद्ध अस्पताल {name} है, सीधी दूरी में लगभग {km} किलोमीटर। मैंने अस्पताल से संपर्क नहीं किया है। एम्बुलेंस के लिए 108 या आपातकाल के लिए 112 पर कॉल करें।",
+        "medicine_refusal": "मैं यह नहीं बता सकता कि कौन सी दवा या कितनी मात्रा लें। यह डॉक्टर, नर्स या फ़ार्मासिस्ट आपको देखकर तय करेंगे।",
         "emergency": "यह आपातकाल हो सकता है। अभी चिकित्सा सहायता लीजिए। 112 पर कॉल करें, या पास के किसी व्यक्ति से तुरंत अस्पताल ले जाने को कहें। इंतज़ार न करें।",
         "crisis": "आप महत्वपूर्ण हैं, और मदद अभी उपलब्ध है। टेली-मानस को 14416 पर कॉल करें, या खतरा हो तो 112 पर। हो सके तो किसी भरोसेमंद व्यक्ति के साथ रहें।",
         "consent_slip": "क्या आप इस बातचीत की एक छोटी पर्ची बनाना चाहेंगे, जिसे आप आशा कार्यकर्ता या डॉक्टर को दिखा सकें? हाँ के लिए 1, नहीं के लिए 2 दबाइए।",
@@ -57,7 +67,12 @@ HAND: dict[str, dict[str, str]] = {
         "ask_question": "আপোনাৰ স্বাস্থ্য সম্পৰ্কীয় প্ৰশ্নটো কওক। কোৱাৰ পিছত ৰওক।",
         "readback": "মই শুনিলোঁ: {text}। শুদ্ধ হ'লে 1 টিপক, আকৌ ক'বলৈ 2 টিপক।",
         "not_heard": "ক্ষমা কৰিব, মই ভালদৰে শুনিব নোৱাৰিলোঁ। অনুগ্ৰহ কৰি আকৌ কওক।",
-        "after_answer": "আন এটা প্ৰশ্নৰ বাবে 1 টিপক। উত্তৰটো আকৌ শুনিবলৈ 2। সহজ ভাষাত শুনিবলৈ 5। ভাষা সলনি কৰিবলৈ 3। কল শেষ কৰিবলৈ 9।",
+        "after_answer": "আন এটা প্ৰশ্নৰ বাবে 1 টিপক। উত্তৰটো আকৌ শুনিবলৈ 2। সহজ ভাষাত শুনিবলৈ 5। ভাষা সলনি কৰিবলৈ 3। ওচৰৰ হাস্পতাল বিচাৰিবলৈ 4। কল শেষ কৰিবলৈ 9।",
+        "emergency_menu": "ওচৰৰ হাস্পতাল বিচাৰিবলৈ 4 টিপক। এই কথা আকৌ শুনিবলৈ 2। কল শেষ কৰিবলৈ 9।",
+        "ask_location": "আপুনি ক'ত আছে? আপোনাৰ গাঁও, চহৰ, পিন ক'ড বা ওচৰৰ কোনো চিনাকি ঠাইৰ নাম কওক, বা ফোনৰ লোকেশ্বন শ্বেয়াৰ কৰক।",
+        "location_not_found": "মই সেই ঠাইখন বিচাৰি নাপালোঁ। ওচৰৰ কোনো চহৰ বা পিন ক'ড কওক। জৰুৰী অৱস্থা হ'লে এতিয়াই 112 ত ফোন কৰক।",
+        "facility_found": "আটাইতকৈ ওচৰৰ তালিকাভুক্ত হাস্পতালখন {name}, পোন দূৰত্বত প্ৰায় {km} কিলোমিটাৰ। মই হাস্পতালৰ সৈতে যোগাযোগ কৰা নাই। এম্বুলেন্সৰ বাবে 108 বা জৰুৰী সহায়ৰ বাবে 112 ত ফোন কৰক।",
+        "medicine_refusal": "কোনটো ঔষধ বা কিমান খাব লাগে মই ক'ব নোৱাৰোঁ। চিকিৎসক, নাৰ্চ বা ফাৰ্মাচিষ্টে আপোনাক চাই সেয়া ঠিক কৰিব।",
         "emergency": "এইটো জৰুৰী অৱস্থা হ'ব পাৰে। এতিয়াই চিকিৎসাৰ সহায় লওক। 112 নম্বৰত ফোন কৰক, বা ওচৰৰ কাৰোবাক তৎক্ষণাত হাস্পতাললৈ লৈ যাবলৈ কওক। অপেক্ষা নকৰিব।",
         "crisis": "আপুনি মূল্যৱান, আৰু সহায় এতিয়াই উপলব্ধ। টেলি-মানছক 14416 নম্বৰত ফোন কৰক, বিপদ হ'লে 112 ত। পাৰিলে বিশ্বাসী কাৰোবাৰ লগত থাকক।",
         "consent_slip": "আশা কৰ্মী বা চিকিৎসকক দেখুৱাবলৈ এই কথোপকথনৰ এখন চমু চিঠি বনাব বিচাৰে নেকি? হয় হ'লে 1, নহয় হ'লে 2 টিপক।",
@@ -82,6 +97,19 @@ async def get(key: str, lang_code: str, **fmt) -> dict:
     hand = HAND.get(lang_code, {})
     if key in hand:
         return {"text": hand[key].format(**fmt), "lang": lang_code, "source": "hand"}
+
+    if fmt and key != "readback":
+        # Translate the filled sentence: machine translation can mangle {placeholders}.
+        from .providers import ProviderError, translate
+
+        filled = EN[key].format(**fmt)
+        try:
+            translated = await translate.from_english(filled, lang_code)
+        except ProviderError:  # a translation outage must not break a call
+            translated = None
+        if translated:
+            return {"text": translated, "lang": lang_code, "source": "machine"}
+        return {"text": filled, "lang": "en-IN", "source": "english_fallback"}
 
     cache_key = (key, lang_code)
     if cache_key not in _machine_cache:

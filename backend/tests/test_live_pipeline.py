@@ -80,6 +80,6 @@ def test_system_prompt_rules():
     cards = knowledge.retrieve("my child has a cough")
     msgs = llm.build_messages("my child has a cough", cards, level="simple", urgent=True)
     sys = msgs[0]["content"]
-    for rule in ["Never diagnose", "doses", "Never claim you contacted", "ONLY the facts", "URGENT"]:
+    for rule in ["Never diagnose", "Never prescribe", "never state a dose", "Never claim you contacted", "ONLY the facts", "URGENT"]:
         assert rule in sys
     assert "10-year-old" in sys

@@ -1,0 +1,10 @@
+{
+  "name": "Aarogya Saathi",
+  "short_name": "Saathi",
+  "description": "Voice health information for North East India, in your language.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EDEBE4",
+  "theme_color": "#2E3A48",
+  "icons": [{ "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

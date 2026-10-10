@@ -1,0 +1,21 @@
+# Render free web service (Blueprint). Free instances sleep after ~15 minutes idle:
+# open the URL a minute before judging so the first request is not slow.
+services:
+  - type: web
+    name: aarogya-saathi
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: LLM_API_KEY      # Groq
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: OSM_ENABLED
+        value: "true"
+      - key: OSM_CONTACT
+        value: https://github.com/sarthak-cc/Aarogya-Sathi

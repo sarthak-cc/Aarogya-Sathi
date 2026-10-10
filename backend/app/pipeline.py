@@ -1,7 +1,7 @@
 """The conversation pipeline shared by the browser simulator and real phone calls.
 
-    audio ─► STT ─► read-back confirm ─► translate→EN ─► TRIAGE ─┬─► emergency script (no LLM)
-                                                                └─► retrieve cards ─► LLM (EN) ─► translate→native ─► TTS
+    audio ─► STT ─► read-back confirm ─► translate→EN ─► TRIAGE ─┬─► emergency script (no LLM) ─► ask location ─► facilities
+                                                                └─► retrieve cards ─► LLM (EN) ─► dose filter ─► translate→native ─► TTS
 
 Each stage is timed so the UI can show a latency waterfall per turn.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from . import audio_store, demo, knowledge, languages, prompts, triage
+from . import audio_store, demo, knowledge, languages, medicine, prompts, triage
 from .providers import ProviderError, ProviderUnavailable, llm, stt, translate, tts
 from .sessions import Session, State
 
@@ -94,6 +94,19 @@ async def hear(session: Session, audio: bytes, filename: str, content_type: str)
             "prompt": await prompts.get("readback", lang, text=transcript), "timings_ms": timer.ms}
 
 
+async def transcribe_only(session: Session, audio: bytes, filename: str, content_type: str) -> dict:
+    """Speech to text with no read-back or state change (used for the caller's location)."""
+    lang = session.language or "en-IN"
+    try:
+        result = await stt.transcribe(audio, filename, content_type, lang)
+    except ProviderUnavailable:
+        return {"ok": False, "reason": "stt_unavailable", "prompt": await prompts.get("not_heard", lang),
+                "hint": "Speech recognition is not configured for this language. Type the place instead."}
+    except ProviderError as exc:
+        return {"ok": False, "reason": "stt_error", "detail": str(exc), "prompt": await prompts.get("not_heard", lang)}
+    return {"ok": True, "transcript": result["text"], "stt_provider": result["provider"]}
+
+
 async def confirm(session: Session, correct: bool) -> dict:
     lang = session.language or "en-IN"
     if not session.pending:
@@ -133,7 +146,8 @@ async def answer(session: Session, transcript: str, simple: Optional[bool] = Non
         tri = triage.assess(transcript, english or "")
 
     turn: dict = {"transcript": transcript, "english": english, "english_source": english_source,
-                  "stt_provider": stt_provider, "triage": tri.to_dict(), "cards": [], "level": level}
+                  "stt_provider": stt_provider, "triage": tri.to_dict(), "cards": [], "level": level,
+                  "medicine": {"request": False, "dose_blocked": False}}
 
     if tri.is_blocking:
         key = "crisis" if tri.level == triage.Level.CRISIS else "emergency"
@@ -149,11 +163,17 @@ async def answer(session: Session, transcript: str, simple: Optional[bool] = Non
             if tip:
                 text = f"{text} {tip}"
         turn["answer"] = {"text": text, "lang": msg["lang"], "source": key, "english": None}
+        # Guidance is already in hand; only now ask where the caller is, so nothing waits on a search.
+        turn["location_prompt"] = await prompts.get("ask_location", lang)
         session.transition(State.EMERGENCY)
     else:
         # 3. Retrieve vetted cards and generate a grounded answer
+        med_request = medicine.is_prescription_request(transcript, english or "")
         with timer.run("retrieve"):
             cards = knowledge.retrieve(english or "")
+            if med_request:  # the medicine-safety card always leads, plus the best topic card
+                cards = [knowledge.by_id("medicine_safety")] + [c for c in cards if c.id != "medicine_safety"][:1]
+        turn["medicine"]["request"] = med_request
         turn["cards"] = [{"id": c.id, "title": c.title, "source": c.source} for c in cards]
         urgent = tri.level == triage.Level.URGENT
         native_answer, answer_en, source = None, None, None
@@ -161,12 +181,17 @@ async def answer(session: Session, transcript: str, simple: Optional[bool] = Non
         if english and llm_ready():
             try:
                 with timer.run("llm"):
-                    answer_en = await llm.answer(english, cards, level=level, urgent=urgent, history=session.history)
+                    answer_en = await llm.answer(english, cards, level=level, urgent=urgent, history=session.history,
+                                                 medicine_request=med_request)
                 source = "llm"
             except (ProviderError, ProviderUnavailable):
                 answer_en, source = None, None
+            if answer_en and medicine.contains_dose(answer_en):
+                # The model stated an amount or frequency: discard it and use the vetted card.
+                answer_en, source = None, None
+                turn["medicine"]["dose_blocked"] = True
         if answer_en is None:
-            scenario = demo.match(transcript, lang)
+            scenario = None if med_request else demo.match(transcript, lang)
             if scenario and scenario["a"]:
                 native_answer = demo.answer_for(scenario["id"], lang, simple=(level == "simple"))
                 answer_en = demo.answer_for(scenario["id"], "en-IN", simple=(level == "simple"))
@@ -175,6 +200,10 @@ async def answer(session: Session, transcript: str, simple: Optional[bool] = Non
                 answer_en = knowledge.card_answer(cards, simpler=(level == "simple"))
                 if urgent:
                     answer_en += " Please see a health worker or doctor within a day."
+                if med_request:  # refusal first, then the general safety points, then the referral
+                    safe = knowledge.by_id("medicine_safety")
+                    answer_en = " ".join([prompts.EN["medicine_refusal"], *safe.facts[1:2 if level == "simple" else 4],
+                                          "If it feels serious, call 108 or 112."])
                 source = "card_fallback"
 
         answer_lang = lang
@@ -191,7 +220,7 @@ async def answer(session: Session, transcript: str, simple: Optional[bool] = Non
 
     with timer.run("tts"):
         turn["voice"] = await speak(session, turn["answer"]["text"], turn["answer"]["lang"])
-    turn["menu"] = await prompts.get("after_answer", lang)
+    turn["menu"] = await prompts.get("emergency_menu" if tri.is_blocking else "after_answer", lang)
     turn["timings_ms"] = timer.ms
     turn["index"] = len(session.turns)
     session.turns.append(turn)
@@ -230,6 +259,13 @@ def _emergency_tip(rule_ids: list[str], lang: str) -> Optional[str]:
 async def _translate_or_none(text: str, lang: str) -> Optional[str]:
     try:
         return await translate.from_english(text, lang)
+    except ProviderError:
+        return None
+
+
+async def to_english_or_none(text: str, lang: str) -> Optional[str]:
+    try:
+        return await translate.to_english(text, lang)
     except ProviderError:
         return None
 

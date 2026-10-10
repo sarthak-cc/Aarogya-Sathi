@@ -46,7 +46,7 @@ class InvalidTransition(Exception):
 @dataclass
 class Session:
     id: str
-    channel: str = "simulator"  # simulator | twilio
+    channel: str = "simulator"  # simulator (web voice); a phone channel can be added later
     state: State = State.INCOMING_CALL
     language: Optional[str] = None
     literacy: str = "standard"  # standard | simple
@@ -60,6 +60,7 @@ class Session:
     created: float = field(default_factory=time.time)
     updated: float = field(default_factory=time.time)
     retries: int = 0
+    location: Optional[dict] = None  # approximate place for facility search; wiped when the call ends
 
     def transition(self, new: State) -> None:
         if new not in ALLOWED[self.state]:
@@ -109,6 +110,7 @@ def end(session: Session) -> dict:
     session.turns.clear()
     session.history.clear()
     session.pending = None
+    session.location = None
     if not session.consent_slip:
         session.slip = None
     return {"ended": True, "data_cleared": True, "slip_kept": session.slip is not None}

@@ -1,5 +1,5 @@
 """Short-lived in-memory audio store so generated speech can be served to the
-browser or to Twilio's <Play>. Nothing is written to disk; clips expire."""
+browser. Nothing is written to disk; clips expire."""
 from __future__ import annotations
 
 import secrets

@@ -7,12 +7,12 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Literal, Optional
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import audio_store, config, demo, handoff, knowledge, languages, pipeline, prompts, sessions, telephony
+from . import audio_store, config, demo, handoff, knowledge, languages, facilities, pipeline, prompts, sessions
 from .sessions import InvalidTransition, State
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -24,7 +24,6 @@ app = FastAPI(
     description="Voice-first multilingual health-information companion for North East India. "
                 "General information only; not a diagnosis; never replaces a health professional.",
 )
-app.include_router(telephony.router)
 
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 RATE_LIMIT = 90  # requests per minute per client IP
@@ -84,6 +83,13 @@ class EndCall(BaseModel):
     consent_slip: bool = False
 
 
+class Location(BaseModel):
+    lat: Optional[float] = Field(None, ge=-90, le=90)
+    lon: Optional[float] = Field(None, ge=-180, le=180)
+    accuracy_m: Optional[float] = Field(None, ge=0)
+    text: Optional[str] = Field(None, max_length=200, examples=["Jalukbari, near Assam Engineering College"])
+
+
 class Literacy(BaseModel):
     level: Literal["standard", "simple"]
 
@@ -111,6 +117,35 @@ async def health():
 async def get_languages():
     return {"languages": languages.all_capabilities(), "menu": prompts.language_menu(),
             "other_languages_digit": languages.OTHER_LANGUAGES_DIGIT}
+
+
+@app.get("/api/channels", tags=["info"])
+async def channels():
+    """Be explicit about what is live and what is planned."""
+    return {"channels": [
+        {"id": "web_voice", "name": "Web voice (browser microphone over HTTPS)", "status": "live",
+         "detail": "Works on any phone or laptop browser. No app and no phone number needed."},
+        {"id": "phone_line", "name": "Keypad phone line (IVR)", "status": "planned",
+         "detail": "Needs a paid telephony provider (for example Twilio or Exotel) and an Indian number with KYC. "
+                   "The call flow is channel-agnostic, so a phone adapter plugs into the same pipeline."},
+        {"id": "hospital_alert", "name": "Notify a hospital or ambulance", "status": "not built",
+         "detail": "Needs an authorised integration with confirmation. Today the caller gets contact details only."},
+    ]}
+
+
+@app.get("/api/facilities", tags=["navigation"])
+async def find_facilities(lat: Optional[float] = Query(None, ge=-90, le=90), lon: Optional[float] = Query(None, ge=-180, le=180),
+                          q: Optional[str] = Query(None, max_length=200)):
+    """Nearest facilities by coordinates, or by a place name / PIN code."""
+    place = None
+    if lat is None or lon is None:
+        if not q:
+            raise HTTPException(422, "Give lat and lon, or a place name or PIN code in q")
+        place = await facilities.resolve(q)
+        if not place:
+            raise HTTPException(404, "Place not found. Try a nearby town or a PIN code.")
+        lat, lon = place["lat"], place["lon"]
+    return {"place": place, **await facilities.find(lat, lon)}
 
 
 @app.get("/api/scenarios", tags=["info"])
@@ -165,12 +200,15 @@ async def set_language(call_id: str, body: SetLanguage):
 
 
 @app.post("/api/calls/{call_id}/transcribe", tags=["call"])
-async def transcribe(call_id: str, audio: UploadFile = File(...)):
+async def transcribe(call_id: str, audio: UploadFile = File(...),
+                     purpose: Literal["question", "location"] = Form("question")):
     s = _session(call_id)
     _require_language(s)
     data = await audio.read()
     if len(data) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "Audio too long. Please keep questions under 30 seconds.")
+    if purpose == "location":
+        return await pipeline.transcribe_only(s, data, audio.filename or "place.webm", audio.content_type or "audio/webm")
     if s.state in (State.ANSWERED, State.EMERGENCY):
         s.transition(State.READY_TO_LISTEN)
     result = await pipeline.hear(s, data, audio.filename or "speech.webm", audio.content_type or "audio/webm")
@@ -202,6 +240,35 @@ async def message(call_id: str, body: Message):
         prompt = await prompts.get("readback", s.language, text=body.text.strip())
         return {"ok": True, "transcript": body.text.strip(), "prompt": prompt}
     return {"ok": True, "turn": await pipeline.answer(s, body.text.strip(), stt_provider="typed")}
+
+
+@app.post("/api/calls/{call_id}/location", tags=["navigation"])
+async def set_location(call_id: str, body: Location):
+    """Browser GPS, or what the caller said (village, town, PIN code, landmark). Kept only for this call."""
+    s = _session(call_id)
+    lang = s.language or "en-IN"
+    if body.lat is not None and body.lon is not None:
+        place = {"name": "Your phone's location", "state": None, "lat": body.lat, "lon": body.lon,
+                 "approximate": (body.accuracy_m or 0) > 500, "method": "device location",
+                 "accuracy_m": body.accuracy_m}
+    elif body.text and body.text.strip():
+        place = await facilities.resolve(body.text)
+        if not place and lang != "en-IN":
+            english = await pipeline.to_english_or_none(body.text, lang)
+            place = await facilities.resolve(english) if english else None
+    else:
+        raise HTTPException(422, "Share a location or say a place name")
+    if not place:
+        prompt = await prompts.get("location_not_found", lang)
+        return {"ok": False, "prompt": prompt, "voice": await pipeline.speak(s, prompt["text"], prompt["lang"]),
+                "emergency_numbers": facilities.EMERGENCY_NUMBERS}
+    s.location = place
+    result = await facilities.find(place["lat"], place["lon"])
+    nearest = result["nearest"]
+    prompt = await prompts.get("facility_found", lang, name=nearest["name"], km=f"{nearest['distance_km']:g}") \
+        if nearest else await prompts.get("location_not_found", lang)
+    return {"ok": True, "place": place, **result, "prompt": prompt,
+            "voice": await pipeline.speak(s, prompt["text"], prompt["lang"])}
 
 
 @app.post("/api/calls/{call_id}/simpler", tags=["call"])

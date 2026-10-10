@@ -188,18 +188,28 @@ CARDS: list[Card] = [
     ),
     Card(
         "medicine_safety", "Medicine safety",
-        ("medicine", "tablet", "antibiotic", "dose", "injection", "drug", "overdose", "painkiller"),
+        ("medicine", "medicines", "medication", "tablet", "tablets", "antibiotic", "dose", "dosage", "injection",
+         "drug", "overdose", "painkiller", "prescription", "pharmacy", "syrup", "paracetamol", "dawai"),
         (
-            "Take medicines only as advised by a doctor or health worker.",
+            "Take medicines only as advised by a doctor or health worker. Only they can choose a medicine and the amount after seeing you.",
+            "If you already have a prescription, follow it, and ask the pharmacist to explain how and when to take it.",
             "Do not share medicines or use leftover antibiotics. Wrong use makes future infections harder to treat.",
-            "Keep all medicines and pesticides locked away from children.",
+            "Tell the doctor if you are pregnant, breastfeeding, or already taking other medicines.",
+            "Painkillers bought at a shop can harm the stomach, liver or kidneys if taken often. Ask before using them regularly.",
+            "Check the expiry date, and keep all medicines and pesticides locked away from children.",
         ),
-        ("If someone swallowed too many tablets or a chemical, go to a hospital immediately.",),
+        ("If someone swallowed too many tablets or a chemical, go to a hospital immediately.",
+         "If a medicine causes a rash, swelling of the face, or trouble breathing, stop and get help at once."),
         "WHO / MoHFW rational medicine use guidance",
     ),
 ]
 
 _word = re.compile(r"[a-z0-9]+")
+_BY_ID = {c.id: c for c in CARDS}
+
+
+def by_id(card_id: str) -> Card:
+    return _BY_ID[card_id]
 
 
 def retrieve(english_text: str, k: int = 2) -> list[Card]:
