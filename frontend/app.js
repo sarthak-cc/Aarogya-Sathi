@@ -204,7 +204,7 @@
   }
 
   // ---------- Screens ----------
-  const MAIN_MENU_TEXT = "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press CALL to start speaking after selecting a language. Press star to replay the main menu. Press END to stop and return to the main menu.";
+  const MAIN_MENU_TEXT = "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press CALL to connect. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.";
   const menuVoiceCache = {};
 
   async function speakMainMenu() {
@@ -235,9 +235,9 @@
         <li><b>4</b> Hospitals</li>
       </ul>
       <div style="font-size:0.75rem; line-height:1.2; opacity:0.95">
-        CALL/#: Speak (${esc(curName)})<br>
-        *: Replay menu<br>
-        END: Stop
+        Press – (dash) to speak (${esc(curName)})<br>
+        Press * to replay menu<br>
+        Press END to stop
       </div>
     `;
     lcd({ html, mode: "select-language" });
@@ -282,7 +282,7 @@
         ${pix("mic")}
         <span style="font-weight:bold; margin-top:2px">Listening…</span>
         <span style="font-size:0.8rem; margin-top:3px">Speak your question</span>
-        <span style="font-size:0.75rem; margin-top:2px; opacity:0.9">Press END to stop</span>
+        <span style="font-size:0.75rem; margin-top:2px; opacity:0.9">Press – (dash) to send</span>
       </div>
     `;
     lcd({ html, mode: "listening" });
@@ -297,11 +297,11 @@
     const html = `
       ${heading("READY")}
       <p style="margin:4px 0 2px"><b>Language:</b> ${esc(name)} (${esc(native)})</p>
-      <p style="margin:2px 0 4px">Press <b>CALL</b> or <b>#</b> to speak.</p>
+      <p style="margin:2px 0 4px">Press <b>– (dash)</b> to speak.</p>
       <div style="margin-top:4px; font-size:0.75rem; line-height:1.2; opacity:0.9">
+        Press – again to send<br>
         4: Nearby Hospitals<br>
-        *: Main Menu<br>
-        END: Main Menu
+        *: Main Menu  END: Stop
       </div>
     `;
     lcd({ html, mode: "ready", lang: S.lang });
@@ -331,7 +331,7 @@
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "emergency", assertive: true });
       if (animate) flashAmber();
     } else {
-      const head = heading("PLAYING RESPONSE");
+      const head = `<div class="heading">RESPONSE</div><div style="font-size:0.75rem;opacity:0.85;margin-bottom:2px">Press – (dash) to speak next</div>`;
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "response" });
     }
     softkeysForState();
@@ -687,7 +687,6 @@
     sfx.soft();
     wake();
     if (S.busy) return;
-    if (S.recording) return; // Prevent duplicate recording!
 
     // If language has not been selected, announce the language menu instead.
     if (!S.langSelected) {
@@ -695,7 +694,20 @@
       return;
     }
 
-    await startSpeaking();
+    // Keep green CALL button's existing call/session behavior unchanged (connects line, does not toggle recording)
+    if (!S.convId) {
+      screenProcessing("Connecting");
+      try {
+        const r = await post("/api/conversations", { language: S.lang });
+        S.convId = r.id;
+        S.startedAt = Date.now();
+        screenReady();
+      } catch (e) {
+        screenNotice("Error", e.message || "Failed to connect");
+      }
+    } else {
+      screenReady();
+    }
   }
 
   function onEnd() {
@@ -703,10 +715,9 @@
     sfx.end();
     wake();
 
-    // END stops and finalizes active recording, submitting captured audio
+    // Red END button: cancel/stop and return-to-menu control
     if (S.recording) {
-      stopRecording({ abort: false });
-      return;
+      stopRecording({ abort: true });
     }
 
     // Stop ongoing menu/audio playback safely, and return to main menu
@@ -730,25 +741,12 @@
     screenMainMenu({ speak: true });
   }
 
-  async function onHash() {
+  function onHash() {
     const btn = el.keypad.querySelector('[data-d="#"]');
     pressFlash(btn);
     sfx.key("#");
     wake();
-    if (S.busy) return;
-
-    // If recording is already active, do not create duplicate; show clear instruction to press END to stop
-    if (S.recording) {
-      screenNotice("RECORDING ACTIVE", "Recording in progress…\n\nPress END to stop.");
-      return;
-    }
-
-    if (!S.langSelected) {
-      screenMainMenu({ speak: true });
-      return;
-    }
-
-    await startSpeaking();
+    // Do not assign recording toggle to #
   }
 
   function onDigit(d) {
@@ -760,7 +758,6 @@
     // While recording, ignore number inputs so recording is not interrupted
     if (S.recording) {
       if (d === "*") return onStar();
-      if (d === "#") return onHash();
       return;
     }
 
@@ -794,36 +791,29 @@
     }
   }
 
-  function onSoftLeft() {
+  async function onSoftLeft() {
+    pressFlash(el.softL);
     sfx.soft();
+    wake();
     if (S.busy) return;
+
+    // Press dash again to stop recording, finalize audio, and submit it to speech endpoint
     if (S.recording) {
-      return onEnd();
+      stopRecording({ abort: false });
+      return;
     }
-    switch (S.phase) {
-      case "select_language":
-      case "menu":
-        if (!S.langSelected) {
-          selectLanguage("en-IN");
-        } else {
-          startSpeaking();
-        }
-        return;
-      case "ready":
-      case "playing_response":
-      case "answered":
-        return startSpeaking();
-      case "emergency":
-        screenNotice("Call 112", "In a real phone, this dials 112 emergency services.", "emergency");
-        return;
-      case "location":
-        return useGps();
-      case "help":
-        screenNotice("Call 108", "Call 108 for ambulance in North East India.", "emergency");
-        return;
-      default:
-        wake();
+
+    if (S.phase === "location") return useGps();
+    if (S.phase === "emergency") return screenNotice("Call 112", "In a real phone, this dials 112 emergency services.", "emergency");
+    if (S.phase === "help") return screenNotice("Call 108", "Call 108 for ambulance in North East India.", "emergency");
+
+    // Press dash once to start microphone recording (or start next recording after response)
+    if (!S.langSelected) {
+      screenMainMenu({ speak: true });
+      return;
     }
+
+    await startSpeaking();
   }
 
   function onSoftRight() {
@@ -1032,18 +1022,11 @@
       pressFlash(up ? el.navUp : el.navDown);
       return onNav(up ? -1 : 1);
     }
-    if (e.key === "ArrowLeft") { e.preventDefault(); pressFlash(el.softL); return onSoftLeft(); }
-    if (e.key === "ArrowRight") { e.preventDefault(); pressFlash(el.softR); return onSoftRight(); }
-    if (e.key === " ") {
+    if (e.key === "ArrowLeft" || e.key === "-" || e.key === " ") {
       e.preventDefault();
-      if (!e.repeat) {
-        if (S.recording) {
-          onEnd();
-        } else {
-          onCall();
-        }
-      }
+      if (!e.repeat) return onSoftLeft();
     }
+    if (e.key === "ArrowRight") { e.preventDefault(); pressFlash(el.softR); return onSoftRight(); }
   });
   document.addEventListener("pointerdown", () => wake(), { passive: true });
 
