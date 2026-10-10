@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aarogya Saathi</title>
+  <meta name="description" content="Voice health-information line for North East India that works on any phone.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600&family=Anek+Devanagari:wght@400;500;600&family=Anek+Latin:wdth,wght@75..125,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <p class="brand-name">Aarogya Saathi</p>
+        <p class="brand-tag">Your health. Your language. Any phone.</p>
+      </div>
+    </div>
+    <div class="mode" id="mode" aria-live="polite">Checking services…</div>
+  </header>
+
+  <main class="layout">
+    <section class="phone-col" aria-label="Phone simulator">
+      <p class="sim-note">Simulated call in the browser. A real line uses the same backend through Twilio.</p>
+
+      <div class="phone" id="phone">
+        <div class="speaker" aria-hidden="true"></div>
+        <div class="screen" id="screen" aria-live="polite">
+          <p class="screen-status" id="screenStatus">Ready</p>
+          <p class="screen-text" id="screenText">Press the green key to call Aarogya Saathi.</p>
+        </div>
+        <div class="softkeys">
+          <button class="key call" id="callBtn" aria-label="Call or answer">Call</button>
+          <button class="key mic" id="micBtn" aria-label="Hold to speak" disabled>Hold to speak</button>
+          <button class="key hang" id="hangBtn" aria-label="End call" disabled>End</button>
+        </div>
+        <div class="keypad" id="keypad">
+          <button class="key" data-d="1">1</button><button class="key" data-d="2">2<small>abc</small></button><button class="key" data-d="3">3<small>def</small></button>
+          <button class="key" data-d="4">4<small>ghi</small></button><button class="key" data-d="5">5<small>jkl</small></button><button class="key" data-d="6">6<small>mno</small></button>
+          <button class="key" data-d="7">7<small>pqrs</small></button><button class="key" data-d="8">8<small>tuv</small></button><button class="key" data-d="9">9<small>wxyz</small></button>
+          <button class="key" data-d="*">*</button><button class="key" data-d="0">0</button><button class="key" data-d="#">#</button>
+        </div>
+      </div>
+
+      <form class="typebox" id="typeForm" autocomplete="off">
+        <label for="typeInput">Or type the question</label>
+        <div class="typerow">
+          <input id="typeInput" placeholder="e.g. My child has had a cough for two days." disabled>
+          <button type="submit" id="typeSend" disabled>Ask</button>
+        </div>
+      </form>
+
+      <div class="scenarios" id="scenarios" hidden>
+        <p>Try a demo question</p>
+        <div class="chips" id="scenarioChips"></div>
+      </div>
+
+      <label class="toggle"><input type="checkbox" id="muteToggle"> Mute voice output</label>
+    </section>
+
+    <section class="panel" aria-label="What the system did">
+      <nav class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="convo">Conversation</button>
+        <button role="tab" aria-selected="false" data-tab="slip">Care slip</button>
+        <button role="tab" aria-selected="false" data-tab="langs">Languages</button>
+      </nav>
+
+      <div class="tab" id="tab-convo">
+        <div class="empty" id="convoEmpty">
+          <h2>Each answer shows its working</h2>
+          <p>Start a call and ask something. You will see what was heard, the English the AI reasoned in, whether the safety check raised a red flag, which vetted health card the answer came from, and how long each step took.</p>
+        </div>
+        <ol class="turns" id="turns"></ol>
+      </div>
+
+      <div class="tab" id="tab-slip" hidden>
+        <div class="empty" id="slipEmpty">
+          <h2>Something to show the health worker</h2>
+          <p>When a caller ends with 9 and agrees, they get a short slip with a code. An ASHA worker or doctor can open it here for 24 hours. Nothing is kept without that consent.</p>
+        </div>
+        <article class="slip" id="slip" hidden></article>
+        <form class="lookup" id="lookupForm">
+          <label for="lookupInput">Open a slip by code</label>
+          <div class="typerow"><input id="lookupInput" maxlength="6" placeholder="6-character code"><button type="submit">Open slip</button></div>
+          <p class="lookup-msg" id="lookupMsg" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="tab" id="tab-langs" hidden>
+        <p class="lead">What each language can do on this line right now. Honest gaps are listed so nobody is promised a voice conversation that cannot happen.</p>
+        <table class="langs">
+          <thead><tr><th>Language</th><th>Key</th><th>Status</th><th>Hear</th><th>Speak</th></tr></thead>
+          <tbody id="langRows"></tbody>
+        </table>
+      </div>
+
+      <footer class="disclaimer" id="disclaimer">Aarogya Saathi provides general health information and does not replace a qualified healthcare professional. If you think you are experiencing a medical emergency, seek emergency help immediately.</footer>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
