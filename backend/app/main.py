@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import audio_store, config, facilities, languages, pipeline, prompts, sessions
+from . import audio_store, config, facilities, languages, photo, pipeline, prompts, sessions
 from .providers import ProviderError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -177,6 +177,23 @@ async def get_audio(key: str):
     if not item:
         raise HTTPException(404, "Audio expired")
     return Response(content=item[0], media_type=item[1], headers={"Cache-Control": "no-store"})
+
+
+# ---------- camera prototype ----------
+
+@app.post("/api/vision/analyze", tags=["vision"])
+async def vision_analyze(image: UploadFile = File(...), language: str = Form("en-IN"),
+                         note: str = Form("", max_length=300)):
+    """Analyze one confirmed photo. Processed in memory, never stored or logged."""
+    if not languages.get(language):
+        raise HTTPException(422, "Unknown language")
+    limit = int(config.settings.vision_max_upload_mb * 1024 * 1024)
+    data = await image.read(limit + 1)
+    if len(data) > limit:
+        raise HTTPException(413, f"Photo too large. Please use one under {config.settings.vision_max_upload_mb:g} MB.")
+    result = await photo.analyze(data, image.content_type or "", language, note)
+    log.info("vision analyze ok=%s error=%s", result["ok"], (result["error"] or {}).get("kind"))
+    return result
 
 
 # ---------- nearby facilities ----------

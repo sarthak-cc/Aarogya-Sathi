@@ -19,6 +19,7 @@ MESSAGES = {
     "unavailable": "{provider} is not reachable right now. Please try again shortly.",
     "bad_response": "{provider} sent an unexpected reply.",
     "unsupported": "{provider} does not support this language.",
+    "model_unavailable": "{provider} could not find the configured model. Check the model name on the server.",
 }
 
 

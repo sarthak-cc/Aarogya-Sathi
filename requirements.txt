@@ -5,3 +5,4 @@ python-multipart>=0.0.9
 python-dotenv>=1.0
 pydantic>=2.6
 pytest>=8.0
+pillow>=10.3

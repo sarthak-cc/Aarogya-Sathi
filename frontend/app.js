@@ -215,7 +215,7 @@
       pressEndStop: "रोकने के लिए END दबाएँ",
       readyTitle: "तैयार",
       langLabel: "भाषा:",
-      readyHelp: "– दबाकर बोलना शुरू करें<br>– दोबारा दबाकर भेजें<br>4: नज़दीकी अस्पताल<br>*: मेनू | END: रोकें",
+      readyHelp: "– दबाकर बोलना शुरू करें<br>– दोबारा दबाकर भेजें<br>4: नज़दीकी अस्पताल | 6: कैमरा<br>*: मेनू | END: रोकें",
       listeningTitle: "सुन रहे हैं",
       listeningMsg: "अपना सवाल बोलिए…",
       listeningDashSend: "भेजने के लिए – दबाएँ",
@@ -226,7 +226,7 @@
       scrollDownHint: "आगे पढ़ने के लिए ▼ दबाएँ",
       micDeniedTitle: "माइक बंद है",
       micDeniedMsg: "माइक्रोफ़ोन की अनुमति नहीं मिली।\nनीचे दिए गए बॉक्स में सवाल टाइप करें।",
-      menuSpoken: "हिंदी के लिए 1 दबाएँ। अंग्रेजी के लिए 2 दबाएँ। असमिया के लिए 3 दबाएँ। नज़दीकी अस्पताल के लिए 4 दबाएँ। बोलने के लिए डैश बटन दबाएँ। मेनू दोबारा सुनने के लिए स्टार दबाएँ। रोकने के लिए एंड बटन दबाएँ।",
+      menuSpoken: "हिंदी के लिए 1 दबाएँ। अंग्रेजी के लिए 2 दबाएँ। असमिया के लिए 3 दबाएँ। नज़दीकी अस्पताल के लिए 4 दबाएँ। कैमरा के लिए 6 दबाएँ। बोलने के लिए डैश बटन दबाएँ। मेनू दोबारा सुनने के लिए स्टार दबाएँ। रोकने के लिए एंड बटन दबाएँ।",
     },
     "as-IN": {
       name: "Assamese",
@@ -237,7 +237,7 @@
       pressEndStop: "বন্ধ কৰিবলৈ END টিপক",
       readyTitle: "প্ৰস্তুত",
       langLabel: "ভাষা:",
-      readyHelp: "– টিপি কথা কওক<br>– আকৌ টিপি প্ৰেৰণ কৰক<br>4: ওচৰৰ চিকিৎসালয়<br>*: মেনু | END: বন্ধ",
+      readyHelp: "– টিপি কথা কওক<br>– আকৌ টিপি প্ৰেৰণ কৰক<br>4: ওচৰৰ চিকিৎসালয় | 6: কেমেৰা<br>*: মেনু | END: বন্ধ",
       listeningTitle: "শুনি থকা হৈছে",
       listeningMsg: "আপোনাৰ প্ৰশ্নটো কওক…",
       listeningDashSend: "প্ৰেৰণ কৰিবলৈ – টিপক",
@@ -248,7 +248,7 @@
       scrollDownHint: "অধিক পঢ়িবলৈ ▼ টিপক",
       micDeniedTitle: "মাইক সংযোগ নাই",
       micDeniedMsg: "মাইক্ৰ'ফোন ব্যৱহাৰৰ অনুমতি নাই।\nতলৰ বাকচত প্ৰশ্নটো লিখক।",
-      menuSpoken: "হিন্দীৰ বাবে 1 টিপক। ইংৰাজীৰ বাবে 2 টিপক। অসমীয়াৰ বাবে 3 টিপক। ওচৰৰ হাস্পতালৰ বাবে 4 টিপক। কথা ক'বলৈ ডেশ্ব টিপক। মেনু আকৌ শুনিবলৈ ষ্টাৰ টিপক। বন্ধ কৰিবলৈ এণ্ড টিপক।",
+      menuSpoken: "হিন্দীৰ বাবে 1 টিপক। ইংৰাজীৰ বাবে 2 টিপক। অসমীয়াৰ বাবে 3 টিপক। ওচৰৰ হাস্পতালৰ বাবে 4 টিপক। কেমেৰাৰ বাবে 6 টিপক। কথা ক'বলৈ ডেশ্ব টিপক। মেনু আকৌ শুনিবলৈ ষ্টাৰ টিপক। বন্ধ কৰিবলৈ এণ্ড টিপক।",
     },
     "en-IN": {
       name: "English",
@@ -259,7 +259,7 @@
       pressEndStop: "Press END to stop",
       readyTitle: "READY",
       langLabel: "Language:",
-      readyHelp: "Press – (dash) to speak<br>Press – again to send<br>4: Nearby Hospitals<br>*: Main Menu | END: Stop",
+      readyHelp: "Press – (dash) to speak<br>Press – again to send<br>4: Hospitals | 6: Camera<br>*: Main Menu | END: Stop",
       listeningTitle: "LISTENING",
       listeningMsg: "Speak your question…",
       listeningDashSend: "Press – (dash) to send",
@@ -270,7 +270,7 @@
       scrollDownHint: "Press ▼ to read more",
       micDeniedTitle: "Mic Blocked",
       micDeniedMsg: "Microphone access was denied.\nYou can type your question in the input box below.",
-      menuSpoken: "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.",
+      menuSpoken: "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press 6 for the camera. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.",
     },
   };
 
@@ -306,6 +306,7 @@
         <li><b>2</b> English</li>
         <li><b>3</b> Assamese (অসমীয়া)</li>
         <li><b>4</b> Hospitals</li>
+        <li><b>6</b> Camera</li>
       </ul>
       <div style="font-size:0.75rem; line-height:1.2; opacity:0.95">
         ${i18n.pressDashToSpeak} (${esc(curName)})<br>
@@ -492,18 +493,97 @@
     end: () => beep([480, 620], 0, 0.45),
   };
 
+  function cleanMock(str) {
+    if (!str) return "";
+    return String(str).replace(/\(mock(?:\s+[a-z]{2}-[A-Z]{2})?\)\s*:?\s*/gi, "").trim();
+  }
+
   // ---------- Voice playback ----------
+  let currentAudioVoice = null;
+
   function stopAudio() {
     if (el.player) {
       el.player.pause();
+      try { el.player.currentTime = 0; } catch (_) {}
       el.player.removeAttribute("src");
     }
   }
-  function playVoice(voice) {
+
+  function clearAutoplayPrompt() {
+    if (el.body) {
+      const existingLcd = el.body.querySelector(".lcd-tap-hear");
+      if (existingLcd) existingLcd.remove();
+    }
+    const pulsingBtn = document.querySelector(".tap-to-hear-pulse");
+    if (pulsingBtn) {
+      pulsingBtn.textContent = "Hear again";
+      pulsingBtn.classList.remove("tap-to-hear-pulse");
+    }
+  }
+
+  function showAutoplayPrompt(voice, langCode, targetCard) {
     if (!voice || !voice.audio_url || el.mute.checked) return;
+    const l = langCode || (S.lastTurn && S.lastTurn.answer && S.lastTurn.answer.lang) || S.lang || "en-IN";
+    const tapLabels = {
+      "hi-IN": "सुनें (Tap to hear)",
+      "as-IN": "শুনক (Tap to hear)",
+      "en-IN": "Tap to hear",
+      "bn-IN": "শুনুন (Tap to hear)",
+    };
+    const label = tapLabels[l] || tapLabels[S.lang] || "Tap to hear";
+
+    // 1. Highlight button on Call log card
+    const card = targetCard || (el.turns ? el.turns.querySelector("li.turn") : null);
+    if (card) {
+      const hearBtn = card.querySelector('[data-act="hear"], [data-act="repeat"]');
+      if (hearBtn) {
+        hearBtn.innerHTML = `▶ <strong>${esc(label)}</strong>`;
+        hearBtn.classList.add("tap-to-hear-pulse");
+      }
+    }
+
+    // 2. Add clickable button on Nokia LCD
+    if (el.body && !el.body.querySelector(".lcd-tap-hear")) {
+      const hint = document.createElement("div");
+      hint.className = "lcd-tap-hear";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = `▶ ${label}`;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        playVoice(voice);
+        clearAutoplayPrompt();
+      };
+      hint.appendChild(btn);
+      el.body.appendChild(hint);
+      updateArrows();
+    }
+  }
+
+  function playVoice(voice, { onBlocked, onPlay } = {}) {
+    if (!voice || !voice.audio_url) return;
+    currentAudioVoice = voice;
+    if (el.mute.checked) return;
     stopAudio();
-    el.player.src = voice.audio_url;
-    el.player.play().catch(() => {});
+
+    const audioSrc = voice.audio_url.startsWith("http")
+      ? voice.audio_url
+      : (window.location.origin + (voice.audio_url.startsWith("/") ? "" : "/") + voice.audio_url);
+
+    el.player.src = audioSrc;
+    try { el.player.load(); } catch (_) {}
+
+    const p = el.player.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        if (onPlay) onPlay();
+        clearAutoplayPrompt();
+      }).catch((err) => {
+        console.warn("Audio playback blocked by browser policy:", err);
+        if (onBlocked) onBlocked(err);
+        else showAutoplayPrompt(voice);
+      });
+    }
   }
 
   // ---------- Controls ----------
@@ -523,6 +603,7 @@
     S.lang = code;
     S.langSelected = true;
     setStatusLang();
+    camLabels();
     if (S.convId) {
       try { api(`/api/conversations/${S.convId}`, { method: "DELETE" }); } catch (_) {}
       S.convId = null;
@@ -573,8 +654,12 @@
   }
 
   async function simpler() {
+    if (S.lastTurn && S.lastTurn.question && S.lastTurn.question.text === camT("heading")) {
+      return repeat();
+    }
     if (!S.convId || !S.lastTurn || S.busy) return;
     stopAudio();
+    clearAutoplayPrompt();
     S.busy = true; setControls();
     screenProcessing("Simpler words");
     try {
@@ -588,6 +673,7 @@
   function repeat() {
     if (!S.lastTurn) return;
     stopAudio();
+    clearAutoplayPrompt();
     screenAnswer(S.lastTurn, { animate: false });
     if (S.lastTurn.voice) playVoice(S.lastTurn.voice);
   }
@@ -772,7 +858,7 @@
     pressFlash(el.call);
     sfx.soft();
     wake();
-    if (S.busy) return;
+    if (S.busy || C.open) return;
 
     // If language has not been selected, announce the language menu instead.
     if (!S.langSelected) {
@@ -802,6 +888,7 @@
     wake();
 
     // Red END button: cancel/stop and return-to-menu control
+    if (C.open) return closeCamera();
     if (S.recording) {
       stopRecording({ abort: true });
     }
@@ -818,6 +905,7 @@
     sfx.key("*");
     wake();
 
+    if (C.open) closeCamera();
     // Stop recording without submitting incomplete audio
     if (S.recording) {
       stopRecording({ abort: true });
@@ -840,6 +928,7 @@
     litKeypad();
     wake();
     if (S.busy) return;
+    if (C.open) { if (d === "*") onStar(); return; } // camera open: only * (menu) and END act
 
     // While recording, ignore number inputs so recording is not interrupted
     if (S.recording) {
@@ -871,6 +960,7 @@
       case "3": return selectLanguage("as-IN");
       case "4": return goLocation();
       case "5": return simpler();
+      case "6": return openCamera();
       case "*": return onStar();
       case "#": return onHash();
       case "0": return triggerEmergency();
@@ -881,7 +971,7 @@
     pressFlash(el.softL);
     sfx.soft();
     wake();
-    if (S.busy) return;
+    if (S.busy || C.open) return;
 
     // Press dash again to stop recording, finalize audio, and submit it to speech endpoint
     if (S.recording) {
@@ -904,6 +994,7 @@
 
   function onSoftRight() {
     sfx.soft();
+    if (C.open) return closeCamera();
     if (S.busy) return;
     if (S.recording) {
       return onStar();
@@ -946,9 +1037,16 @@
     S.phase = isEmerg ? "emergency" : "answered";
     screenAnswer(turn);
     if (isEmerg) sfx.alert(); else sfx.blip();
-    if (turn.voice) playVoice(turn.voice);
+    const cardEl = turnElement(turn);
     el.convoEmpty.hidden = true;
-    el.turns.prepend(turnElement(turn));
+    el.turns.prepend(cardEl);
+    if (turn.voice) {
+      playVoice(turn.voice, {
+        onBlocked: () => {
+          showAutoplayPrompt(turn.voice, turn.answer && turn.answer.lang, cardEl);
+        }
+      });
+    }
     setControls();
   }
 
@@ -963,7 +1061,7 @@
     }[lvl] || "Safety check complete.";
 
     const matches = (t.triage && t.triage.matches) ? t.triage.matches.map((m) => m.label).join(", ") : "";
-    const questionText = t.question ? t.question.text : (t.transcript || "Question");
+    const questionText = cleanMock(t.question ? t.question.text : (t.transcript || "Question"));
     const steps = Object.entries(t.timings_ms || {}).filter(([k]) => STEP_NAMES[k]);
     const total = steps.reduce((a, [, v]) => a + v, 0) || 1;
     const BLOCKS = 48;
@@ -975,18 +1073,18 @@
         ${t.english && S.lang !== "en-IN" ? `
           <details class="said-pivot">
             <summary>English translation</summary>
-            <p class="said-meta" style="margin:2px 0 0">English pivot: ${esc(t.english)}</p>
+            <p class="said-meta" style="margin:2px 0 0">English pivot: ${esc(cleanMock(t.english))}</p>
           </details>` : ""}
       </div>
       <div class="flag ${lvl}"><b>${esc(flagText)}</b>${matches ? `<br>Matched: ${esc(matches)}` : ""}</div>
       ${t.medicine && t.medicine.request ? `<div class="flag med"><b>Medicine Safety:</b> Prescriptions and dosage requests are strictly filtered. General safety guidance provided.</div>` : ""}
       <div>
         <p style="margin:0 0 .35rem"><span class="source">${esc(t.answer.source || "Live AI")}</span>${t.voice && t.voice.provider ? `<span class="source" style="background:#EAF3EC;color:#2F7D45">${esc(t.voice.provider)}</span>` : ""}</p>
-        <p class="answer" lang="${langAttr(t.answer.lang || S.lang)}">${esc(t.answer.text)}</p>
+        <p class="answer" lang="${langAttr(t.answer.lang || S.lang)}">${esc(cleanMock(t.answer.text))}</p>
         ${t.answer.english && t.answer.lang !== "en-IN" ? `
           <details class="said-pivot" style="margin-top:6px">
             <summary>English text</summary>
-            <p class="answer-en" style="margin:2px 0 0">English: ${esc(t.answer.english)}</p>
+            <p class="answer-en" style="margin:2px 0 0">English: ${esc(cleanMock(t.answer.english))}</p>
           </details>` : ""}
       </div>
       ${steps.length ? `<div class="timing" aria-label="Latency breakdown">
@@ -999,12 +1097,16 @@
         ${lvl === "emergency" ? '<button type="button" class="find-help" data-act="hospital">Find nearest hospital</button>' : ""}
       </div>`;
 
-    li.querySelector('[data-act="repeat"]').onclick = () => { repeat(); };
+    li.querySelector('[data-act="repeat"]').onclick = () => {
+      clearAutoplayPrompt();
+      repeat();
+    };
     li.querySelector('[data-act="simpler"]').onclick = () => { simpler(); };
     const hBtn = li.querySelector('[data-act="hospital"]');
     if (hBtn) hBtn.onclick = () => goLocation();
     return li;
   }
+
 
   function facilityItem(f, first) {
     return `<li class="facility${first ? " nearest" : ""}">
@@ -1085,6 +1187,325 @@
     document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
     ["convo", "hospitals", "langs"].forEach((t) => { $(`tab-${t}`).hidden = t !== name; });
   }
+
+  // ---------- Camera prototype: flip to the rear, preview, flash, capture, analyze ----------
+  // Lifecycle: open → requesting → live (or upload) → captured → analyzing → result (flip front) | cancel.
+  // The camera runs only while the rear is shown; every exit path calls closeCamera().
+  const CAM_T = {
+    "en-IN": { ready: "CAMERA READY", requesting: "REQUESTING CAMERA", denied: "CAMERA PERMISSION NEEDED", flashOn: "FLASH ON",
+      flashOff: "FLASH OFF", captured: "IMAGE CAPTURED", toAnalyze: "READY TO ANALYZE", analyzing: "ANALYZING...", done: "RESPONSE READY",
+      unavailable: "CAMERA UNAVAILABLE", failed: "ANALYSIS FAILED", cancelled: "CANCELLED", flash: "Flash", capture: "Capture",
+      upload: "Upload photo", switchCam: "Switch", retake: "Retake", analyze: "Analyze", cancel: "Cancel", back: "Back to phone",
+      open: "Camera", note: "Add a few words (optional)",
+      privacy: "Analyze sends this one photo to Groq AI for analysis. Aarogya Saathi does not save it.",
+      flashNote: "The flash is a simulated light for this prototype.", torchNote: "Simulated light, and the phone's torch is on.",
+      noCamera: "No camera found. You can upload a photo instead.", deniedMsg: "Camera permission was refused. Allow it in browser settings, or upload a photo.",
+      insecure: "The camera needs https:// or localhost. You can upload a photo instead.", heading: "PHOTO CHECK" },
+    "hi-IN": { ready: "कैमरा तैयार", requesting: "कैमरा अनुमति माँगी जा रही है", denied: "कैमरा अनुमति चाहिए", flashOn: "फ़्लैश चालू",
+      flashOff: "फ़्लैश बंद", captured: "फ़ोटो ली गई", toAnalyze: "जाँच के लिए तैयार", analyzing: "जाँच हो रही है...", done: "जवाब तैयार",
+      unavailable: "कैमरा उपलब्ध नहीं", failed: "जाँच विफल", cancelled: "रद्द किया गया", flash: "फ़्लैश", capture: "फ़ोटो लें",
+      upload: "फ़ोटो चुनें", switchCam: "कैमरा बदलें", retake: "फिर से लें", analyze: "जाँचें", cancel: "रद्द करें", back: "फ़ोन पर लौटें",
+      open: "कैमरा", note: "कुछ शब्द लिखें (वैकल्पिक)",
+      privacy: "जाँचें दबाने पर यही एक फ़ोटो Groq AI को भेजी जाएगी। आरोग्य साथी इसे सहेजता नहीं है।",
+      flashNote: "यह फ़्लैश इस प्रोटोटाइप की नकली रोशनी है।", torchNote: "नकली रोशनी, और फ़ोन की टॉर्च भी चालू है।",
+      noCamera: "कैमरा नहीं मिला। आप फ़ोटो चुनकर भेज सकते हैं।", deniedMsg: "कैमरा की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें, या फ़ोटो चुनें।",
+      insecure: "कैमरा के लिए https:// या localhost ज़रूरी है। आप फ़ोटो चुन सकते हैं।", heading: "फ़ोटो जाँच" },
+    "as-IN": { ready: "কেমেৰা সাজু", requesting: "কেমেৰাৰ অনুমতি বিচৰা হৈছে", denied: "কেমেৰাৰ অনুমতি লাগে", flashOn: "ফ্লেশ্ব অন",
+      flashOff: "ফ্লেশ্ব অফ", captured: "ফটো লোৱা হ'ল", toAnalyze: "বিশ্লেষণৰ বাবে সাজু", analyzing: "বিশ্লেষণ চলি আছে...", done: "উত্তৰ সাজু",
+      unavailable: "কেমেৰা উপলব্ধ নহয়", failed: "বিশ্লেষণ বিফল", cancelled: "বাতিল কৰা হ'ল", flash: "ফ্লেশ্ব", capture: "ফটো লওক",
+      upload: "ফটো বাছক", switchCam: "কেমেৰা সলনি", retake: "পুনৰ লওক", analyze: "বিশ্লেষণ কৰক", cancel: "বাতিল কৰক", back: "ফোনলৈ উভতি যাওক",
+      open: "কেমেৰা", note: "কেইটামান শব্দ লিখক (ইচ্ছাধীন)",
+      privacy: "বিশ্লেষণ টিপিলে এই এখন ফটোহে Groq AI লৈ পঠিওৱা হ'ব। আৰোগ্য সাথীয়ে ইয়াক সংৰক্ষণ নকৰে।",
+      flashNote: "এই ফ্লেশ্ব প্ৰ'ট'টাইপৰ অনুকৰণ পোহৰ।", torchNote: "অনুকৰণ পোহৰ, আৰু ফোনৰ টৰ্চো অন আছে।",
+      noCamera: "কেমেৰা পোৱা নগ'ল। আপুনি ফটো বাছি পঠিয়াব পাৰে।", deniedMsg: "কেমেৰাৰ অনুমতি পোৱা নগ'ল। ব্ৰাউজাৰ ছেটিঙত অনুমতি দিয়ক, বা ফটো বাছক।",
+      insecure: "কেমেৰাৰ বাবে https:// বা localhost লাগে। আপুনি ফটো বাছিব পাৰে।", heading: "ফটো পৰীক্ষা" },
+  };
+  const camT = (k) => ((CAM_T[S.lang] || CAM_T["en-IN"])[k]) || CAM_T["en-IN"][k];
+  const C = { open: false, stream: null, facing: "environment", flash: false, torch: false, blob: null, shotUrl: null,
+    busy: false, abort: null, devices: 0 };
+  const cam = {
+    flipper: $("flipper"), front: $("phone"), back: $("phoneBack"), col: document.querySelector(".phone-col"),
+    led: $("led"), cone: $("cone"), vf: $("viewfinder"), video: $("camVideo"), shot: $("camShot"), status: $("camStatus"),
+    controls: $("camControls"), live: $("camLive"), flashBtn: $("camFlash"), capture: $("camCapture"), upload: $("camUpload"),
+    switchBtn: $("camSwitch"), retake: $("camRetake"), analyze: $("camAnalyze"), cancel: $("camCancel"), file: $("camFile"),
+    note: $("camNote"), noteLabel: $("camNoteLabel"), privacy: $("camPrivacy"), flashNote: $("camFlashNote"),
+    openBtn: $("cameraOpenBtn"), openLabel: $("cameraOpenLabel"),
+  };
+
+  function camStatus(key, { bad = false, detail = "" } = {}) {
+    const text = camT(key);
+    cam.status.textContent = text;
+    cam.live.textContent = detail ? `${text} · ${detail}` : text;
+    cam.live.classList.toggle("bad", bad);
+  }
+  function camLabels() {
+    cam.flashBtn.textContent = `${camT("flash")}: ${C.flash ? "ON" : "OFF"}`;
+    cam.capture.textContent = camT("capture"); cam.upload.textContent = camT("upload");
+    cam.switchBtn.textContent = camT("switchCam"); cam.retake.textContent = camT("retake");
+    cam.analyze.textContent = camT("analyze"); cam.cancel.textContent = C.busy ? camT("cancel") : camT("back");
+    cam.noteLabel.textContent = camT("note"); cam.privacy.textContent = camT("privacy");
+    cam.flashNote.textContent = C.torch ? camT("torchNote") : camT("flashNote");
+    cam.openLabel.textContent = camT("open");
+    [cam.controls, cam.openBtn].forEach((n) => { n.lang = langAttr(S.lang); });
+  }
+  function camButtons() {
+    const live = !!C.stream, shot = !!C.blob;
+    cam.capture.hidden = shot; cam.capture.disabled = !live || C.busy;
+    cam.upload.hidden = shot; cam.upload.disabled = C.busy;
+    cam.switchBtn.hidden = shot || !live || C.devices < 2; cam.switchBtn.disabled = C.busy;
+    cam.retake.hidden = !shot; cam.retake.disabled = C.busy;
+    cam.analyze.hidden = !shot; cam.analyze.disabled = C.busy;
+    cam.note.disabled = C.busy;
+    cam.flashBtn.setAttribute("aria-pressed", String(C.flash));
+    camLabels();
+  }
+
+  function positionCone() { // start the light cone at the LED; layout offsets ignore the flip/scale transforms
+    const m = cam.led.offsetParent; // .cam-module
+    if (!m) return;
+    cam.back.style.setProperty("--led-x", `${m.offsetLeft + cam.led.offsetLeft + cam.led.offsetWidth / 2}px`);
+    cam.back.style.setProperty("--led-y", `${m.offsetTop + cam.led.offsetTop + cam.led.offsetHeight / 2}px`);
+  }
+
+  function flip(toBack) {
+    cam.flipper.classList.toggle("flipped", toBack);
+    cam.back.toggleAttribute("inert", !toBack); cam.back.setAttribute("aria-hidden", String(!toBack));
+    cam.front.toggleAttribute("inert", toBack); cam.front.setAttribute("aria-hidden", String(toBack));
+    cam.controls.hidden = !toBack;
+    cam.col.classList.toggle("camera-mode", toBack);
+  }
+
+  async function openCamera() {
+    if (C.open || S.busy) return;
+    if (S.recording) stopRecording({ abort: true });
+    stopAudio();
+    C.open = true; C.blob = null; C.flash = false; setFlash(false);
+    S.prevPhase = S.phase; S.phase = "camera";
+    showShot(null);
+    flip(true);
+    requestAnimationFrame(positionCone);
+    camButtons();
+    cam.flashBtn.focus({ preventScroll: true });
+    await startStream();
+  }
+
+  async function startStream() {
+    stopStream();
+    if (!window.isSecureContext) { camStatus("unavailable", { bad: true, detail: camT("insecure") }); return camButtons(); }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { camStatus("unavailable", { bad: true, detail: camT("noCamera") }); return camButtons(); }
+    camStatus("requesting");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: C.facing }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false });
+      if (!C.open || C.blob) { stream.getTracks().forEach((t) => t.stop()); return; } // closed or captured while asking
+      C.stream = stream;
+      cam.video.srcObject = stream; cam.video.hidden = false;
+      await cam.video.play().catch(() => {});
+      try { C.devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "videoinput").length; } catch (_) { C.devices = 1; }
+      camStatus("ready");
+      if (C.flash) applyTorch(true);
+    } catch (e) {
+      const denied = e && (e.name === "NotAllowedError" || e.name === "SecurityError");
+      camStatus(denied ? "denied" : "unavailable", { bad: true, detail: denied ? camT("deniedMsg") : camT("noCamera") });
+    }
+    camButtons();
+  }
+
+  function stopStream() {
+    if (C.stream) C.stream.getTracks().forEach((t) => t.stop());
+    C.stream = null; C.torch = false;
+    cam.video.pause(); cam.video.srcObject = null; cam.video.hidden = true;
+  }
+
+  // Simulated flash (always) + real torch only where the browser and camera say they support it.
+  function setFlash(on) {
+    C.flash = on;
+    cam.led.classList.toggle("on", on); cam.cone.classList.toggle("on", on); cam.vf.classList.toggle("lit", on);
+    if (C.open) { camStatus(on ? "flashOn" : "flashOff"); applyTorch(on); }
+    camButtons();
+  }
+  async function applyTorch(on) {
+    const track = C.stream && C.stream.getVideoTracks()[0];
+    const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+    if (!caps.torch) { C.torch = false; return camLabels(); }
+    try { await track.applyConstraints({ advanced: [{ torch: on }] }); C.torch = on; } catch (_) { C.torch = false; }
+    camLabels();
+  }
+
+  function showShot(blob) {
+    if (C.shotUrl) URL.revokeObjectURL(C.shotUrl);
+    C.shotUrl = blob ? URL.createObjectURL(blob) : null;
+    cam.shot.hidden = !blob;
+    if (blob) cam.shot.src = C.shotUrl; else cam.shot.removeAttribute("src");
+  }
+
+  function capture() {
+    if (!C.stream || C.busy || !cam.video.videoWidth) return;
+    const w = cam.video.videoWidth, h = cam.video.videoHeight, k = Math.min(1, 1280 / Math.max(w, h));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * k); canvas.height = Math.round(h * k);
+    canvas.getContext("2d").drawImage(cam.video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob || !C.open) return;
+      C.blob = blob;
+      stopStream(); // review a still photo; the camera is off while reviewing
+      showShot(blob);
+      camStatus("toAnalyze");
+      camButtons();
+      cam.analyze.focus({ preventScroll: true });
+    }, "image/jpeg", 0.9);
+  }
+
+  function onFile() {
+    const f = cam.file.files && cam.file.files[0];
+    cam.file.value = "";
+    if (!f || !C.open) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) { camStatus("failed", { bad: true, detail: "JPEG, PNG or WebP only." }); return; }
+    stopStream();
+    C.blob = f; showShot(f);
+    camStatus("toAnalyze"); camButtons();
+    cam.analyze.focus({ preventScroll: true });
+  }
+
+  function retake() {
+    if (C.busy) return;
+    C.blob = null; showShot(null); camButtons();
+    startStream();
+  }
+
+  async function analyzePhoto() {
+    if (!C.blob || C.busy) return; // one request at a time
+    C.busy = true; C.abort = new AbortController();
+    camStatus("analyzing"); camButtons();
+    const fd = new FormData();
+    fd.append("image", C.blob, C.blob.name || "photo.jpg");
+    fd.append("language", S.lang);
+    if (cam.note.value.trim()) fd.append("note", cam.note.value.trim());
+    let r;
+    try {
+      const res = await fetch("/api/vision/analyze", { method: "POST", body: fd, signal: C.abort.signal });
+      r = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof r.detail === "string" ? r.detail : `Server error (${res.status})`);
+    } catch (e) {
+      C.busy = false; C.abort = null;
+      if (e.name === "AbortError") return; // cancelled by the user; closeCamera already ran
+      camStatus("failed", { bad: true, detail: e instanceof TypeError ? "Network error. Check the connection." : e.message });
+      return camButtons();
+    }
+    C.busy = false; C.abort = null;
+    if (!r.ok) {
+      camStatus("failed", { bad: true, detail: (r.error && r.error.message) || "" });
+      return camButtons();
+    }
+    camStatus("done");
+    closeCamera({ keepStatus: true });
+    renderPhotoResult(r);
+  }
+
+  function closeCamera({ keepStatus = false } = {}) {
+    if (C.abort) { C.abort.abort(); C.abort = null; }
+    C.busy = false;
+    stopStream();
+    setFlash(false);
+    C.blob = null; showShot(null);
+    cam.note.value = "";
+    if (!C.open) return;
+    C.open = false;
+    flip(false);
+    if (!keepStatus) camStatus("cancelled");
+    S.phase = S.lastTurn && S.prevPhase === "answered" ? "answered" : (S.langSelected ? "ready" : "select_language");
+    if (!keepStatus) { if (S.langSelected) screenReady(); else screenMainMenu({ speak: false }); }
+    setControls();
+    cam.openBtn.focus({ preventScroll: true });
+  }
+
+  function renderPhotoResult(r) {
+    const v = r.vision, a = r.answer, isEm = r.triage && r.triage.level === "emergency";
+    S.phase = isEm ? "emergency" : "answered";
+    S.lastTurn = { answer: a, voice: r.voice, triage: r.triage, question: { text: camT("heading") }, timings_ms: r.timings_ms };
+    const head = isEm ? `<div class="inv">${pix("alert")}<span>! ${esc(camT("heading"))}</span></div>` : heading(camT("heading"));
+    const displayText = cleanMock((a && a.text) ? a.text : (v ? v.observation : ""));
+    lcd({ html: head, type: displayText, lang: a.lang, mode: isEm ? "emergency" : "response", assertive: isEm });
+
+    setTimeout(() => {
+      if (el.body && el.body.scrollHeight > el.body.clientHeight + 4) {
+        const i18n = I18N[a.lang] || I18N[S.lang] || I18N["en-IN"];
+        const hint = document.createElement("div");
+        hint.className = "lcd-scroll-hint";
+        hint.textContent = i18n.scrollDownHint || "Press ▼ to read more";
+        el.body.appendChild(hint);
+        updateArrows();
+      }
+    }, 50);
+
+    if (isEm) { flashAmber(); sfx.alert(); } else sfx.blip();
+    softkeysForState(); setControls();
+
+    const cardEl = photoElement(r);
+    el.convoEmpty.hidden = true;
+    el.turns.prepend(cardEl);
+
+    if (r.voice && r.voice.audio_url) {
+      playVoice(r.voice, {
+        onBlocked: () => {
+          showAutoplayPrompt(r.voice, a.lang || S.lang, cardEl);
+        }
+      });
+    }
+  }
+
+  function photoElement(r) {
+    const li = document.createElement("li");
+    li.className = "turn photo";
+    const v = r.vision, a = r.answer, lvl = (r.triage && r.triage.level) || "none";
+    const list = (items) => items && items.length ? `<ul class="photo-list" lang="${langAttr(a.lang)}">${items.map((x) => `<li>${esc(cleanMock(x))}</li>`).join("")}</ul>` : "";
+    const flagText = { none: "Photo check: no urgent signs reported by the AI.", urgent: "Photo check: see a health worker within a day.",
+      emergency: "Possible emergency. Call 112 now." }[lvl] || "";
+    li.innerHTML = `
+      <p class="turn-time" style="margin:0">${timeStamp()} · ${esc(langCode(S.lang))} · PHOTO</p>
+      <div class="flag ${lvl}"><b>${esc(flagText)}</b>${r.triage && r.triage.source ? `<br><small>Source: ${r.triage.source === "rules" ? "safety rules" : "AI photo check"}</small>` : ""}</div>
+      ${v ? `
+        <div><b>What the photo shows</b><p class="answer" lang="${langAttr(a.lang)}">${esc(cleanMock(v.observation))}</p></div>
+        ${v.possible_explanations.length ? `<div><b>Possible explanations (not a diagnosis)</b>${list(v.possible_explanations)}</div>` : ""}
+        ${v.recommended_next_steps.length ? `<div><b>What you can do</b>${list(v.recommended_next_steps)}</div>` : ""}
+        ${v.follow_up_questions.length ? `<div><b>Questions</b>${list(v.follow_up_questions)}</div>` : ""}
+        ${v.image_quality === "insufficient" ? '<p class="voice-note">The photo was not clear enough to assess. Try again in good light, closer.</p>' : ""}
+        <p class="voice-note" lang="${langAttr(a.lang)}">${esc(cleanMock(v.disclaimer))}</p>` : `<p class="answer" lang="${langAttr(a.lang)}">${esc(cleanMock(a.text))}</p>`}
+      ${a.language_note ? `<p class="voice-note">${esc(cleanMock(a.language_note))}</p>` : ""}
+      ${r.voice && r.voice.note ? `<p class="voice-note">${esc(cleanMock(r.voice.note))}</p>` : ""}
+      <p class="voice-note">${esc(r.privacy)}${a.model ? ` · ${esc(a.model)}` : ""}</p>
+      <div class="answer-actions">
+        ${r.voice && r.voice.audio_url ? '<button type="button" data-act="hear">Hear again</button>' : ""}
+        ${r.offer_facilities ? '<button type="button" class="find-help" data-act="hospital">Find nearest hospital</button>' : ""}
+      </div>`;
+    const hear = li.querySelector('[data-act="hear"]');
+    if (hear) {
+      hear.onclick = () => {
+        clearAutoplayPrompt();
+        playVoice(r.voice);
+      };
+    }
+    const hosp = li.querySelector('[data-act="hospital"]'); if (hosp) hosp.onclick = () => goLocation();
+    return li;
+  }
+
+
+  cam.openBtn.onclick = () => openCamera();
+  cam.flashBtn.onclick = () => setFlash(!C.flash);
+  cam.capture.onclick = capture;
+  cam.upload.onclick = () => { if (!C.busy) cam.file.click(); };
+  cam.file.onchange = onFile;
+  cam.switchBtn.onclick = () => { if (C.busy) return; C.facing = C.facing === "environment" ? "user" : "environment"; startStream(); };
+  cam.retake.onclick = retake;
+  cam.analyze.onclick = analyzePhoto;
+  cam.cancel.onclick = () => closeCamera();
+  // Never keep the camera running in the background; resume the preview when the tab returns.
+  document.addEventListener("visibilitychange", () => {
+    if (!C.open || C.busy) return;
+    if (document.hidden) { stopStream(); camButtons(); }
+    else if (!C.blob && !C.stream) startStream();
+  });
+  window.addEventListener("resize", () => C.open && positionCone());
+  camLabels();
 
   // ---------- Wiring & Event Listeners ----------
   el.call.onclick = onCall;

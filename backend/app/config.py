@@ -36,6 +36,14 @@ class Settings:
     llm_max_tokens: int = field(default_factory=lambda: int(_env("LLM_MAX_TOKENS", "1200")))
     llm_timeout: float = field(default_factory=lambda: float(_env("LLM_TIMEOUT", "30")))
 
+    # Vision (camera prototype): Groq vision-capable chat model, separate from the text LLM above.
+    vision_model: str = field(default_factory=lambda: _env("VISION_MODEL", "qwen/qwen3.8-27b"))
+    vision_base_url: str = field(default_factory=lambda: _env("VISION_BASE_URL", "https://api.groq.com/openai/v1"))
+    # Qwen3.8 on Groq: "none" = instruct mode (fast, no reasoning text). Blank to omit.
+    vision_reasoning_effort: str = field(default_factory=lambda: _env("VISION_REASONING_EFFORT", "none"))
+    vision_timeout: float = field(default_factory=lambda: float(_env("VISION_TIMEOUT", "45")))
+    vision_max_upload_mb: float = field(default_factory=lambda: float(_env("VISION_MAX_UPLOAD_MB", "8")))
+
     # Sarvam AI: speech-to-text (22 Indian languages), translation, Bulbul voice (11 languages).
     sarvam_api_key: str = field(default_factory=lambda: _env("SARVAM_API_KEY"))
     sarvam_base_url: str = field(default_factory=lambda: _env("SARVAM_BASE_URL", "https://api.sarvam.ai"))
@@ -76,6 +84,14 @@ class Settings:
         return bool(self.sarvam_api_key)
 
     @property
+    def vision_api_key(self) -> str:
+        """GROQ_API_KEY; the LLM key is reused only when the text LLM is also Groq."""
+        explicit = _env("GROQ_API_KEY")
+        if explicit:
+            return explicit
+        return self.llm_api_key if "groq.com" in self.llm_base_url else ""
+
+    @property
     def has_sarvam_voice_clone(self) -> bool:
         return bool(self.sarvam_api_key and self.sarvam_voice_id)
 
@@ -107,6 +123,8 @@ class Settings:
                                                              ("sarvam-clone", self.has_sarvam_voice_clone),
                                                              ("mms", bool(self.mms_langs)),
                                                              ("parler", self.has_parler)) if ok]},
+            "vision": {"configured": bool(self.vision_api_key), "model": self.vision_model if self.vision_api_key else None,
+                       "needs": None if self.vision_api_key else "Set GROQ_API_KEY for photo analysis."},
             "maps": {"configured": self.osm_enabled, "source": "OpenStreetMap" if self.osm_enabled else None},
         }
 
