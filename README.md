@@ -42,6 +42,11 @@ in the language picker.
 
 Native speakers still need to review answer quality in every language. Machine checks can't judge it.
 
+## Camera prototype (photo check)
+Press **6** on the handset to flip it around: the rear camera previews, a simulated flash lights the scene, and one
+confirmed photo is analyzed by Groq vision (`qwen/qwen3.8-27b`) and explained, cautiously, in the selected language with
+voice. Photos are never stored. Details, API and tests: [`docs/CAMERA.md`](docs/CAMERA.md).
+
 ## Run it locally
 
 ```bash

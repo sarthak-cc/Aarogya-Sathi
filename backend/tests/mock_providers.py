@@ -35,6 +35,14 @@ def tone_wav(seconds=0.4, rate=16000):
 async def chat(req: Request):
     body = await req.json()
     q = body["messages"][-1]["content"]
+    if isinstance(q, list):  # vision request (text + image_url parts)
+        import json as _json
+        return {"choices": [{"message": {"role": "assistant", "content": _json.dumps({
+            "observation": "(mock) The photo shows a small red patch on the skin.",
+            "possible_explanations": ["(mock) This can happen with an insect bite."],
+            "follow_up_questions": ["(mock) How long has it been there?"],
+            "recommended_next_steps": ["(mock) Keep it clean and dry.", "(mock) See an ASHA worker if it spreads."],
+            "urgency": "see_health_worker", "image_quality": "ok"})}}]}
     tag = "EMERGENCY" if "lips are grey" in q else "ROUTINE"
     return {"choices": [{"message": {"role": "assistant", "content": f"TRIAGE: {tag}\n(mock) Answer about: {q[:60]}. See a health worker if it gets worse."}}]}
 

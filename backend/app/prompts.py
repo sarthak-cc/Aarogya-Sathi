@@ -15,6 +15,7 @@ EN: dict[str, str] = {
     "crisis": "You matter, and help is available right now. Please call Tele-MANAS on 14416, or 112 if you are in danger. If you can, stay with someone you trust.",
     "ask_location": "To find the nearest hospital, share your location or type your village, town, PIN code or a nearby landmark.",
     "not_heard": "Sorry, I could not hear that clearly. Please try again, or type your question.",
+    "photo_disclaimer": "This is not a diagnosis. A photo cannot show everything. If you are worried, or it gets worse, see a health worker or doctor.",
 }
 
 # One-line first aid spoken after the emergency message, per triage rule.
@@ -39,6 +40,7 @@ TIPS_EN: dict[str, str] = {
 
 HAND: dict[str, dict[str, str]] = {
     "hi-IN": {
+        "photo_disclaimer": "यह निदान नहीं है। फ़ोटो से सब कुछ नहीं दिखता। चिंता हो या हालत बिगड़े, तो स्वास्थ्य कार्यकर्ता या डॉक्टर से मिलें।",
         "emergency": "यह आपातकाल हो सकता है। अभी 112 पर कॉल करें, या पास के किसी व्यक्ति से तुरंत नज़दीकी अस्पताल ले जाने को कहें। इंतज़ार न करें।",
         "crisis": "आप महत्वपूर्ण हैं, और मदद अभी उपलब्ध है। टेली-मानस को 14416 पर कॉल करें, या खतरा हो तो 112 पर। हो सके तो किसी भरोसेमंद व्यक्ति के साथ रहें।",
         "ask_location": "नज़दीकी अस्पताल ढूँढने के लिए अपनी लोकेशन साझा करें, या अपना गाँव, शहर, पिन कोड या पास की कोई पहचान वाली जगह लिखें।",
@@ -53,6 +55,7 @@ HAND: dict[str, dict[str, str]] = {
         "tip_stroke": "लक्षण शुरू होने का समय नोट करें। खाने या पीने को कुछ न दें।",
     },
     "as-IN": {
+        "photo_disclaimer": "এইটো ৰোগ নিৰ্ণয় নহয়। ফটোত সকলো কথা দেখা নাযায়। চিন্তা হ'লে বা অৱস্থা বেয়া হ'লে স্বাস্থ্য কৰ্মী বা চিকিৎসকক দেখুৱাওক।",
         "emergency": "এইটো জৰুৰী অৱস্থা হ'ব পাৰে। এতিয়াই 112 নম্বৰত ফোন কৰক, বা ওচৰৰ কাৰোবাক মানুহজনক তৎক্ষণাত ওচৰৰ হাস্পতাললৈ লৈ যাবলৈ কওক। অপেক্ষা নকৰিব।",
         "crisis": "আপুনি মূল্যৱান, আৰু সহায় এতিয়াই উপলব্ধ। টেলি-মানছক 14416 নম্বৰত ফোন কৰক, বিপদ হ'লে 112 ত। পাৰিলে বিশ্বাসী কাৰোবাৰ লগত থাকক।",
         "ask_location": "ওচৰৰ হাস্পতাল বিচাৰিবলৈ আপোনাৰ লোকেশ্বন শ্বেয়াৰ কৰক, বা আপোনাৰ গাঁও, চহৰ, পিন ক'ড বা ওচৰৰ চিনাকি ঠাইৰ নাম লিখক।",
@@ -65,6 +68,7 @@ HAND: dict[str, dict[str, str]] = {
         "tip_stroke": "লক্ষণ আৰম্ভ হোৱাৰ সময় মনত ৰাখক। খোৱা বা পানী খাবলৈ নিদিব।",
     },
     "bn-IN": {
+        "photo_disclaimer": "এটি রোগ নির্ণয় নয়। ছবিতে সবকিছু দেখা যায় না। চিন্তা হলে বা অবস্থা খারাপ হলে স্বাস্থ্যকর্মী বা ডাক্তারকে দেখান।",
         "emergency": "এটি জরুরি অবস্থা হতে পারে। এখনই 112 নম্বরে ফোন করুন, বা কাছের কাউকে বলুন রোগীকে এখনই কাছের হাসপাতালে নিয়ে যেতে। দেরি করবেন না।",
         "crisis": "আপনি মূল্যবান, এবং সাহায্য এখনই পাওয়া যায়। টেলি-মানসে 14416 নম্বরে ফোন করুন, বিপদ হলে 112 নম্বরে। পারলে বিশ্বস্ত কারও সঙ্গে থাকুন।",
         "ask_location": "কাছের হাসপাতাল খুঁজতে আপনার লোকেশন শেয়ার করুন, বা আপনার গ্রাম, শহর, পিন কোড বা কাছের কোনো পরিচিত জায়গার নাম লিখুন।",
