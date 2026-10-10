@@ -18,9 +18,10 @@
 
   const S = {
     convId: null,
-    phase: "idle", // idle | calling | language | ready | answered | emergency | location | help | ended
-    view: "main",  // main | menu | notice
-    lang: "as-IN",
+    phase: "select_language", // select_language | ready | listening | processing | playing_response | emergency | location | help
+    view: "menu",
+    lang: "en-IN",
+    langSelected: false,
     languages: [],
     lastTurn: null,
     health: null,
@@ -159,22 +160,33 @@
     el.softR.setAttribute("aria-label", right ? `Right softkey, ${right}` : "Right softkey");
   }
   function softkeysForState() {
-    const sub = S.view !== "main";
     switch (S.phase) {
-      case "idle": return setSoftkeys("Call", sub ? "Back" : "Menu");
-      case "calling": return setSoftkeys("", "");
-      case "language": return setSoftkeys("Select", "Back");
-      case "ready": return setSoftkeys(S.recording ? "Release" : "Speak", "Type");
-      case "answered": return setSoftkeys("Again", sub ? "Back" : "Menu");
-      case "emergency": return setSoftkeys("Call 112", sub ? "Back" : "Hospital");
-      case "location": return setSoftkeys(S.recording ? "Release" : "GPS", "Back");
-      case "help": return setSoftkeys("Call 108", "Back");
-      default: return setSoftkeys("", "");
+      case "idle":
+      case "select_language":
+      case "menu":
+        return setSoftkeys(S.langSelected ? "Speak" : "Select", "Menu");
+      case "ready":
+        return setSoftkeys("Speak", "Menu");
+      case "listening":
+        return setSoftkeys("Stop", "Cancel");
+      case "processing":
+        return setSoftkeys("", "");
+      case "playing_response":
+      case "answered":
+        return setSoftkeys("Speak", "Menu");
+      case "emergency":
+        return setSoftkeys("Call 112", "Hospital");
+      case "location":
+        return setSoftkeys("GPS", "Menu");
+      case "help":
+        return setSoftkeys("Call 108", "Menu");
+      default:
+        return setSoftkeys("", "");
     }
   }
 
   function langCode(code) { return code ? code.split("-")[0].toUpperCase() : ""; }
-  function setStatusLang() { el.lang.textContent = langCode(S.lang); }
+  function setStatusLang() { el.lang.textContent = S.langSelected ? langCode(S.lang) : "--"; }
 
   let backlightTimer = null;
   function wake() {
@@ -192,31 +204,109 @@
   }
 
   // ---------- Screens ----------
+  const MAIN_MENU_TEXT = "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press CALL to start speaking after selecting a language. Press star to replay the main menu. Press END to stop and return to the main menu.";
+  const menuVoiceCache = {};
+
+  async function speakMainMenu() {
+    stopAudio();
+    if (el.mute.checked) return;
+    const l = S.langSelected ? S.lang : "en-IN";
+    try {
+      if (!menuVoiceCache[l]) {
+        menuVoiceCache[l] = await post("/api/speak", { text: MAIN_MENU_TEXT, lang: l });
+      }
+      if (menuVoiceCache[l] && menuVoiceCache[l].audio_url) {
+        playVoice(menuVoiceCache[l]);
+      }
+    } catch (_) {}
+  }
+
+  function screenMainMenu({ speak = false } = {}) {
+    stopAudio();
+    S.view = "menu";
+    S.phase = "select_language";
+    const curName = S.langSelected ? (S.lang === "hi-IN" ? "Hindi" : (S.lang === "as-IN" ? "Assamese" : "English")) : "None";
+    const html = `
+      ${heading("SELECT LANGUAGE")}
+      <ul class="menu" style="margin:2px 0 4px">
+        <li><b>1</b> Hindi</li>
+        <li><b>2</b> English</li>
+        <li><b>3</b> Assamese</li>
+        <li><b>4</b> Hospitals</li>
+      </ul>
+      <div style="font-size:0.75rem; line-height:1.2; opacity:0.95">
+        CALL/#: Speak (${esc(curName)})<br>
+        *: Replay menu<br>
+        END: Stop
+      </div>
+    `;
+    lcd({ html, mode: "select-language" });
+    softkeysForState();
+    setControls();
+    if (speak) {
+      speakMainMenu();
+    }
+  }
+
   function clock() { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
   function screenIdle() {
-    S.view = "main";
-    lcd({ html: `<div class="center">${pix("heart", "pix big")}<span>AAROGYA</span><span>SAATHI</span><span>health line</span><span>${clock()}</span></div>` });
-    softkeysForState();
-  }
-  function screenCalling() {
-    lcd({ html: `<div class="center" style="margin-top:22px">${pix("handset", "pix big")}<span class="dots">Connecting</span></div>` });
-    softkeysForState();
+    screenMainMenu({ speak: false });
   }
   function screenText(title, text, lang = "en-IN", icon = "") {
     lcd({ html: title ? heading(title, icon) : "", type: text, lang });
   }
   function screenThinking(text) {
-    lcd({ html: `<div class="center" style="margin-top:10px"><span class="hourglass">${pix("hourglass", "pix big")}</span><span>${esc(text || "Thinking")}</span></div>` });
+    screenProcessing(text);
+  }
+  function screenProcessing(text = "Processing") {
+    S.phase = "processing";
+    const html = `
+      ${heading("PROCESSING")}
+      <div class="center" style="margin-top:8px">
+        <span class="hourglass">${pix("hourglass", "pix big")}</span>
+        <span style="font-weight:bold; margin-top:4px">${esc(text)}…</span>
+        <span style="font-size:0.75rem; margin-top:4px; opacity:0.85">Please wait</span>
+      </div>
+    `;
+    lcd({ html, mode: "processing" });
+    softkeysForState();
+    setControls();
   }
   function screenListening() {
-    lcd({ html: `<div class="center"><div class="eq">${"<i></i>".repeat(8)}</div>${pix("mic")}<span>Listening…</span></div>` });
+    S.view = "main";
+    S.phase = "listening";
+    const html = `
+      ${heading("LISTENING")}
+      <div class="center" style="margin-top:4px">
+        <div class="eq">${"<i></i>".repeat(8)}</div>
+        ${pix("mic")}
+        <span style="font-weight:bold; margin-top:2px">Listening…</span>
+        <span style="font-size:0.8rem; margin-top:3px">Speak your question</span>
+        <span style="font-size:0.75rem; margin-top:2px; opacity:0.9">Press END to stop</span>
+      </div>
+    `;
+    lcd({ html, mode: "listening" });
+    softkeysForState();
+    setControls();
   }
   function screenReady() {
     S.view = "main";
-    const curLang = S.languages.find((l) => l.code === S.lang);
-    const nativeName = curLang ? curLang.native_name : S.lang;
-    lcd({ html: heading(`Line ready (${nativeName})`), type: "Hold Speak, or type below. Press 4 for nearest hospital.", lang: S.lang });
+    S.phase = "ready";
+    const name = S.lang === "hi-IN" ? "Hindi" : (S.lang === "as-IN" ? "Assamese" : "English");
+    const native = S.lang === "hi-IN" ? "हिंदी" : (S.lang === "as-IN" ? "অসমীয়া" : "English");
+    const html = `
+      ${heading("READY")}
+      <p style="margin:4px 0 2px"><b>Language:</b> ${esc(name)} (${esc(native)})</p>
+      <p style="margin:2px 0 4px">Press <b>CALL</b> or <b>#</b> to speak.</p>
+      <div style="margin-top:4px; font-size:0.75rem; line-height:1.2; opacity:0.9">
+        4: Nearby Hospitals<br>
+        *: Main Menu<br>
+        END: Main Menu
+      </div>
+    `;
+    lcd({ html, mode: "ready", lang: S.lang });
     softkeysForState();
+    setControls();
   }
 
   function langMenuItems() {
@@ -229,39 +319,27 @@
     }));
   }
   function screenLanguage() {
-    const items = langMenuItems();
-    S.menuSel = Math.max(0, Math.min(S.menuSel, items.length - 1));
-    const rows = items.map((it, i) => `<li class="${i === S.menuSel ? "selected" : ""}"><b>${it.digit}</b><span lang="${langAttr(it.code)}">${esc(it.label)} (${esc(it.name)})</span></li>`).join("");
-    clearInterval(typeTimer);
-    el.lcd.dataset.mode = "";
-    el.body.innerHTML = `${heading("Choose language")}<ul class="menu" aria-label="Languages">${rows}</ul>`;
-    const sel = el.body.querySelector(".selected");
-    if (sel) {
-      const top = sel.offsetTop - el.body.offsetTop, bottom = top + sel.offsetHeight;
-      if (top < el.body.scrollTop + 26) el.body.scrollTop = Math.max(0, top - 26);
-      else if (bottom > el.body.scrollTop + el.body.clientHeight) el.body.scrollTop = bottom - el.body.clientHeight;
-    }
-    updateArrows(); wake();
-    softkeysForState();
+    screenMainMenu({ speak: false });
   }
 
   function screenAnswer(turn, { animate = true } = {}) {
     S.view = "main";
+    S.phase = "playing_response";
     const lvl = (turn.triage && turn.triage.level) || "none";
     if (lvl === "emergency") {
       const head = `<div class="inv">${pix("alert")}<span>! EMERGENCY 112</span></div>`;
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "emergency", assertive: true });
       if (animate) flashAmber();
     } else {
-      lcd({ html: "", type: turn.answer.text, lang: turn.answer.lang });
+      const head = heading("PLAYING RESPONSE");
+      lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "response" });
     }
     softkeysForState();
+    setControls();
   }
 
   function screenMenu() {
-    S.view = "menu";
-    lcd({ html: heading("Menu"), type: "1 Ask  2 Repeat  3 Language  4 Hospital  5 Simpler  9 End  0 Emergency", lang: "en-IN" });
-    softkeysForState();
+    screenMainMenu({ speak: false });
   }
 
   function screenNotice(title, text, mode = "") {
@@ -346,71 +424,80 @@
 
   // ---------- Controls ----------
   function setControls() {
-    const inCall = !!S.convId && !["ended", "idle", "calling"].includes(S.phase);
-    const canAsk = inCall && ["ready", "answered", "emergency", "location"].includes(S.phase) && !S.busy;
-    el.typeInput.disabled = el.typeSend.disabled = !canAsk;
-    el.typeInput.placeholder = S.phase === "location" ? "Village, town, district, PIN code" : "e.g. My child has a fever.";
+    const canType = !S.busy && ["ready", "playing_response", "answered", "location", "select_language"].includes(S.phase);
+    el.typeInput.disabled = el.typeSend.disabled = !canType;
+    el.typeInput.placeholder = S.phase === "location" ? "Village, town, district, PIN code" : "Type your question here…";
     el.typeLabel.textContent = S.phase === "location" ? "Type your location" : "Type instead";
-    el.scenarios.hidden = !canAsk;
-    if (canAsk) renderScenarioChips();
+    el.scenarios.hidden = !canType;
+    if (canType) renderScenarioChips();
     softkeysForState();
   }
 
-  // ---------- Conversation Lifecycle ----------
-  async function startCall() {
-    if (S.convId || S.phase === "calling") return;
+  // ---------- Language & Conversation Lifecycle ----------
+  function selectLanguage(code) {
     stopAudio();
-    el.lcd.classList.remove("off");
-    S.phase = "calling"; S.lastTurn = null; S.menuSel = 0;
-    setStatusLang();
-    screenCalling(); sfx.ring();
-    try {
-      const r = await post("/api/conversations", { language: S.lang });
-      S.convId = r.id;
-      S.startedAt = Date.now();
-      S.phase = "ready";
-      screenReady();
-    } catch (e) {
-      S.phase = "idle";
-      screenText("No network", e.message || "Failed to connect");
-      softkeysForState();
-    }
-    setControls();
-  }
-
-  async function switchLanguage(code) {
     S.lang = code;
+    S.langSelected = true;
     setStatusLang();
     if (S.convId) {
-      try { await api(`/api/conversations/${S.convId}`, { method: "DELETE" }); } catch (_) {}
+      try { api(`/api/conversations/${S.convId}`, { method: "DELETE" }); } catch (_) {}
       S.convId = null;
     }
-    await startCall();
+    screenReady();
+  }
+
+  async function startSpeaking() {
+    if (S.recording || S.busy) return;
+    stopAudio();
+
+    if (!S.convId) {
+      screenProcessing("Connecting");
+      try {
+        const r = await post("/api/conversations", { language: S.lang });
+        S.convId = r.id;
+        S.startedAt = Date.now();
+      } catch (e) {
+        screenNotice("Connection Error", e.message || "Failed to start session.");
+        return;
+      }
+    }
+
+    await startRecording();
   }
 
   async function askText(text) {
-    if (!text.trim() || !S.convId) return;
+    if (!text.trim() || S.busy) return;
     stopAudio();
+    if (!S.convId) {
+      try {
+        const r = await post("/api/conversations", { language: S.lang });
+        S.convId = r.id;
+        S.startedAt = Date.now();
+      } catch (e) {
+        screenNotice("Error", e.message || "Failed to start conversation.");
+        return;
+      }
+    }
     S.busy = true; setControls();
-    screenThinking("Thinking");
+    screenProcessing("Thinking");
     try {
       const turn = await post(`/api/conversations/${S.convId}/ask`, { text, simple: false });
       renderAnswer(turn);
     } catch (e) {
-      S.busy = false; screenText("Error", e.message); setControls();
+      S.busy = false; screenNotice("Error", e.message); setControls();
     }
   }
 
   async function simpler() {
-    if (!S.convId || !S.lastTurn) return;
+    if (!S.convId || !S.lastTurn || S.busy) return;
     stopAudio();
     S.busy = true; setControls();
-    screenThinking("Simpler words");
+    screenProcessing("Simpler words");
     try {
       const turn = await post(`/api/conversations/${S.convId}/simpler`, {});
       renderAnswer(turn);
     } catch (e) {
-      S.busy = false; screenText("Error", e.message); setControls();
+      S.busy = false; screenNotice("Error", e.message); setControls();
     }
   }
 
@@ -421,26 +508,10 @@
     if (S.lastTurn.voice) playVoice(S.lastTurn.voice);
   }
 
-  async function endCall() {
-    if (!S.convId) {
-      if (S.phase !== "idle") { S.phase = "idle"; screenIdle(); setControls(); }
-      return;
-    }
-    stopAudio();
-    sfx.end();
-    try {
-      await api(`/api/conversations/${S.convId}`, { method: "DELETE" });
-    } catch (_) {}
-    S.convId = null; S.phase = "ended"; S.view = "main"; S.recording = false;
-    el.rec.hidden = true;
-    screenEnded();
-    setControls();
-  }
-
   async function triggerEmergency() {
     stopAudio();
     sfx.alert();
-    screenThinking("Emergency");
+    screenProcessing("Emergency");
     try {
       const r = await api(`/api/emergency?lang=${encodeURIComponent(S.lang)}`);
       S.phase = "emergency";
@@ -453,12 +524,15 @@
       };
       renderAnswer(fakeTurn);
     } catch (e) {
-      screenText("Emergency", "Call 112 for ambulance & police immediately.");
+      screenNotice("Emergency", "Call 112 for ambulance & police immediately.", "emergency");
     }
   }
 
   // ---------- Microphone / Audio recording (16 kHz mono WAV) ----------
   let rec = null;
+  let recStream = null;
+  let abortRecording = false;
+
   async function toWav(blob) {
     const actx = new (window.AudioContext || window.webkitAudioContext)();
     const decoded = await actx.decodeAudioData(await blob.arrayBuffer());
@@ -479,52 +553,86 @@
   }
 
   async function startRecording() {
-    if (!S.convId || S.busy || S.recording) return;
+    if (S.recording || S.busy) return;
     stopAudio();
+    abortRecording = false;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+      recStream = stream;
       const mr = new MediaRecorder(stream);
       const chunks = [];
-      mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
       mr.onstop = async () => {
-        stream.getTracks().forEach((tr) => tr.stop());
-        S.recording = false; el.rec.hidden = true; softkeysForState();
-        if (chunks.length) {
+        if (recStream) {
+          recStream.getTracks().forEach((tr) => tr.stop());
+          recStream = null;
+        }
+        S.recording = false;
+        el.rec.hidden = true;
+        softkeysForState();
+
+        if (abortRecording) {
+          abortRecording = false;
+          return;
+        }
+
+        if (chunks.length > 0) {
           try {
+            screenProcessing("Processing audio");
             const wavBlob = await toWav(new Blob(chunks, { type: mr.mimeType || "audio/webm" }));
             await sendSpeechAudio(wavBlob);
           } catch (err) {
-            screenText("Audio error", err.message);
+            S.busy = false;
+            screenNotice("Audio Error", err.message);
+            setControls();
           }
+        } else {
+          screenNotice("No Audio", "No sound detected. Press CALL or # to try again.");
+          setControls();
         }
       };
       rec = mr;
       mr.start();
-      S.recording = true; el.rec.hidden = false;
+      S.recording = true;
+      el.rec.hidden = false;
       screenListening();
       softkeysForState();
     } catch (_) {
-      screenText("Mic blocked", "Allow microphone access, or type your question.");
+      S.recording = false;
+      el.rec.hidden = true;
+      screenNotice("Mic Blocked", "Microphone access was denied.\nYou can type your question in the input box below.");
+      el.typeInput.disabled = false;
+      el.typeSend.disabled = false;
+      el.typeInput.focus();
     }
   }
 
-  function stopRecording() {
+  function stopRecording({ abort = false } = {}) {
+    if (abort) {
+      abortRecording = true;
+    }
     if (rec && rec.state === "recording") {
       rec.stop();
+    } else {
+      S.recording = false;
+      el.rec.hidden = true;
     }
     rec = null;
   }
 
   async function sendSpeechAudio(wavBlob) {
-    S.busy = true; setControls();
-    screenThinking("Transcribing");
+    if (S.busy) return;
+    S.busy = true;
+    setControls();
+    screenProcessing("Transcribing speech");
     const fd = new FormData();
     fd.append("audio", wavBlob, "question.wav");
     fd.append("simple", "false");
     try {
       const r = await post(`/api/conversations/${S.convId}/speech`, fd);
       if (r.error) {
-        screenText("Not understood", r.hint ? r.hint.text : r.error.message, S.lang);
+        screenNotice("Not understood", r.hint ? r.hint.text : r.error.message);
         S.busy = false; setControls();
         return;
       }
@@ -532,7 +640,7 @@
         renderAnswer(r.turn);
       }
     } catch (e) {
-      S.busy = false; screenText("Error", e.message); setControls();
+      S.busy = false; screenNotice("Error", e.message); setControls();
     }
   }
 
@@ -546,7 +654,7 @@
 
   function useGps() {
     if (!navigator.geolocation) return screenLocation("No GPS found. Say or type a place.");
-    screenThinking("Getting GPS");
+    screenProcessing("Getting GPS");
     navigator.geolocation.getCurrentPosition(
       (pos) => submitFacilitiesSearch({ lat: pos.coords.latitude, lon: pos.coords.longitude, emergency: S.phase === "emergency" }),
       () => screenLocation("Location off. Type a place or PIN."),
@@ -556,7 +664,7 @@
 
   async function submitFacilitiesSearch(body) {
     S.busy = true; setControls();
-    screenThinking("Searching");
+    screenProcessing("Searching");
     try {
       const r = await post("/api/facilities/search", body);
       S.busy = false; S.pinBuf = "";
@@ -568,23 +676,91 @@
       renderHospitalsTab(r);
       switchTab("hospitals");
     } catch (e) {
-      S.busy = false; S.phase = "location"; screenText("Error", e.message);
+      S.busy = false; S.phase = "location"; screenNotice("Error", e.message);
     }
     setControls();
   }
 
-  // ---------- Keypad & Softkey Dispatch ----------
+  // ---------- Keypad & Button Actions ----------
+  async function onCall() {
+    pressFlash(el.call);
+    sfx.soft();
+    wake();
+    if (S.busy) return;
+    if (S.recording) return; // Prevent duplicate recording!
+
+    // If language has not been selected, announce the language menu instead.
+    if (!S.langSelected) {
+      screenMainMenu({ speak: true });
+      return;
+    }
+
+    await startSpeaking();
+  }
+
+  function onEnd() {
+    pressFlash(el.end);
+    sfx.end();
+    wake();
+
+    // END stops and finalizes active recording, submitting captured audio
+    if (S.recording) {
+      stopRecording({ abort: false });
+      return;
+    }
+
+    // Stop ongoing menu/audio playback safely, and return to main menu
+    stopAudio();
+    S.busy = false;
+    screenMainMenu({ speak: false });
+  }
+
+  function onStar() {
+    const btn = el.keypad.querySelector('[data-d="*"]');
+    pressFlash(btn);
+    sfx.key("*");
+    wake();
+
+    // Stop recording without submitting incomplete audio
+    if (S.recording) {
+      stopRecording({ abort: true });
+    }
+    stopAudio();
+    S.busy = false;
+    screenMainMenu({ speak: true });
+  }
+
+  async function onHash() {
+    const btn = el.keypad.querySelector('[data-d="#"]');
+    pressFlash(btn);
+    sfx.key("#");
+    wake();
+    if (S.busy) return;
+
+    // If recording is already active, do not create duplicate; show clear instruction to press END to stop
+    if (S.recording) {
+      screenNotice("RECORDING ACTIVE", "Recording in progress…\n\nPress END to stop.");
+      return;
+    }
+
+    if (!S.langSelected) {
+      screenMainMenu({ speak: true });
+      return;
+    }
+
+    await startSpeaking();
+  }
+
   function onDigit(d) {
     sfx.key(d);
     litKeypad();
+    wake();
     if (S.busy) return;
 
-    if (S.phase === "language") {
-      const items = langMenuItems();
-      const match = items.find((it) => it.digit === d);
-      if (match) {
-        switchLanguage(match.code);
-      }
+    // While recording, ignore number inputs so recording is not interrupted
+    if (S.recording) {
+      if (d === "*") return onStar();
+      if (d === "#") return onHash();
       return;
     }
 
@@ -602,17 +778,18 @@
       const n = Number(d);
       if (n >= 1 && n <= Math.min(3, list.length)) return screenFacility(list[n - 1]);
       if (d === "4") return goLocation();
-      if (d === "9") return endCall();
+      if (d === "*") return onStar();
       return;
     }
 
     switch (d) {
-      case "1": if (S.convId) { stopAudio(); S.phase = "ready"; screenReady(); return setControls(); } break;
-      case "2": return repeat();
-      case "3": S.phase = "language"; return screenLanguage();
+      case "1": return selectLanguage("hi-IN");
+      case "2": return selectLanguage("en-IN");
+      case "3": return selectLanguage("as-IN");
       case "4": return goLocation();
       case "5": return simpler();
-      case "9": return endCall();
+      case "*": return onStar();
+      case "#": return onHash();
       case "0": return triggerEmergency();
     }
   }
@@ -620,42 +797,42 @@
   function onSoftLeft() {
     sfx.soft();
     if (S.busy) return;
+    if (S.recording) {
+      return onEnd();
+    }
     switch (S.phase) {
-      case "idle": return startCall();
-      case "language": {
-        const items = langMenuItems();
-        const it = items[S.menuSel];
-        if (it) switchLanguage(it.code);
+      case "select_language":
+      case "menu":
+        if (!S.langSelected) {
+          selectLanguage("en-IN");
+        } else {
+          startSpeaking();
+        }
         return;
-      }
-      case "answered": stopAudio(); S.phase = "ready"; screenReady(); return setControls();
-      case "emergency": screenNotice("Call 112", "In a real phone, this dials 112 emergency services.", "emergency"); return;
-      case "location": return useGps();
-      case "help": screenNotice("Call 108", "Call 108 for ambulance in North East India.", "emergency"); return;
-      default: wake();
+      case "ready":
+      case "playing_response":
+      case "answered":
+        return startSpeaking();
+      case "emergency":
+        screenNotice("Call 112", "In a real phone, this dials 112 emergency services.", "emergency");
+        return;
+      case "location":
+        return useGps();
+      case "help":
+        screenNotice("Call 108", "Call 108 for ambulance in North East India.", "emergency");
+        return;
+      default:
+        wake();
     }
   }
 
   function onSoftRight() {
     sfx.soft();
     if (S.busy) return;
-    if (S.view !== "main") {
-      if (S.phase === "idle") return screenIdle();
-      if (S.phase === "help") return screenHelp(S.help);
-      if (S.lastTurn) return screenAnswer(S.lastTurn, { animate: false });
-      S.view = "main"; softkeysForState(); return;
+    if (S.recording) {
+      return onStar();
     }
-    switch (S.phase) {
-      case "idle": return screenMenu();
-      case "language": S.phase = "ready"; return screenReady();
-      case "ready": return el.typeInput.focus();
-      case "answered": return screenMenu();
-      case "emergency": return goLocation();
-      case "location": case "help":
-        S.phase = S.lastTurn ? "answered" : "ready";
-        if (S.lastTurn) screenAnswer(S.lastTurn, { animate: false }); else screenReady();
-        return setControls();
-    }
+    return screenMainMenu({ speak: false });
   }
 
   function onNav(dir) {
@@ -826,41 +1003,16 @@
   }
 
   // ---------- Wiring & Event Listeners ----------
-  el.call.onclick = () => { pressFlash(el.call); startCall(); };
-  el.end.onclick = () => { pressFlash(el.end); endCall(); };
+  el.call.onclick = onCall;
+  el.end.onclick = onEnd;
   el.keypad.addEventListener("click", (e) => {
     const k = e.target.closest(".key");
     if (k && k.dataset.d) onDigit(k.dataset.d);
   });
   el.navUp.onclick = () => onNav(-1);
   el.navDown.onclick = () => onNav(1);
+  el.softL.onclick = onSoftLeft;
   el.softR.onclick = onSoftRight;
-
-  // Left softkey: hold or click to speak
-  let holdStarted = false, suppressClick = false;
-  el.softL.addEventListener("pointerdown", (e) => {
-    suppressClick = false;
-    if (S.phase === "ready" && !S.busy && S.convId) {
-      e.preventDefault();
-      holdStarted = true;
-      sfx.soft();
-      startRecording();
-    }
-  });
-  const releaseHold = () => {
-    if (holdStarted) {
-      holdStarted = false;
-      suppressClick = true;
-      stopRecording();
-    }
-  };
-  el.softL.addEventListener("pointerup", releaseHold);
-  el.softL.addEventListener("pointercancel", releaseHold);
-  el.softL.addEventListener("pointerleave", releaseHold);
-  el.softL.addEventListener("click", () => {
-    if (suppressClick) { suppressClick = false; return; }
-    if (S.phase !== "ready") onSoftLeft();
-  });
 
   // Physical keyboard support
   document.addEventListener("keydown", (e) => {
@@ -872,28 +1024,25 @@
       onDigit(e.key);
       return;
     }
-    if (e.key === "Enter") { e.preventDefault(); pressFlash(el.call); return startCall(); }
-    if (e.key === "Escape") { e.preventDefault(); pressFlash(el.end); return endCall(); }
+    if (e.key === "Enter") { e.preventDefault(); return onCall(); }
+    if (e.key === "Escape") { e.preventDefault(); return onEnd(); }
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
       e.preventDefault();
       const up = e.key === "ArrowUp";
       pressFlash(up ? el.navUp : el.navDown);
       return onNav(up ? -1 : 1);
     }
-    if (e.key === "ArrowLeft") { e.preventDefault(); pressFlash(el.softL); return S.phase === "ready" ? undefined : onSoftLeft(); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); pressFlash(el.softL); return onSoftLeft(); }
     if (e.key === "ArrowRight") { e.preventDefault(); pressFlash(el.softR); return onSoftRight(); }
     if (e.key === " ") {
       e.preventDefault();
-      if (!e.repeat && S.phase === "ready") {
-        pressFlash(el.softL);
-        startRecording();
+      if (!e.repeat) {
+        if (S.recording) {
+          onEnd();
+        } else {
+          onCall();
+        }
       }
-    }
-  });
-  document.addEventListener("keyup", (e) => {
-    if (e.key === " " && S.recording && e.target.tagName !== "INPUT") {
-      e.preventDefault();
-      stopRecording();
     }
   });
   document.addEventListener("pointerdown", () => wake(), { passive: true });
@@ -928,9 +1077,9 @@
   window.addEventListener("resize", fitPhone);
 
   // ---------- Boot ----------
-  screenIdle();
+  screenMainMenu({ speak: false });
   fitPhone();
-  setInterval(() => { if (S.phase === "idle" && S.view === "main") screenIdle(); }, 30000);
+  setInterval(() => { if (S.phase === "select_language" && S.view === "menu") screenMainMenu({ speak: false }); }, 60000);
 
   (async () => {
     try {
