@@ -7,46 +7,73 @@
   <meta name="description" content="Voice health-information line for North East India that works on any phone.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600&family=Anek+Devanagari:wght@400;500;600&family=Anek+Latin:wdth,wght@75..125,400..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Bengali:wght@500;600&family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <div>
-        <p class="brand-name">Aarogya Saathi</p>
-        <p class="brand-tag">Your health. Your language. Any phone.</p>
-      </div>
-    </div>
+    <p class="brand-name">Aarogya Saathi <span class="brand-tag">Your health. Your language. Any phone.</span></p>
     <div class="mode" id="mode" aria-live="polite">Checking services…</div>
   </header>
 
   <main class="layout">
     <section class="phone-col" aria-label="Phone simulator">
-      <p class="sim-note">Simulated call in the browser. A real line uses the same backend through Twilio.</p>
+      <div class="phone-wrap" id="phoneWrap">
+        <div class="phone" id="phone">
+          <div class="earpiece" aria-hidden="true"></div>
+          <p class="bezel-brand" aria-hidden="true">SAATHI</p>
 
-      <div class="phone" id="phone">
-        <div class="speaker" aria-hidden="true"></div>
-        <div class="screen" id="screen" aria-live="polite">
-          <p class="screen-status" id="screenStatus">Ready</p>
-          <p class="screen-text" id="screenText">Press the green key to call Aarogya Saathi.</p>
-        </div>
-        <div class="softkeys">
-          <button class="key call" id="callBtn" aria-label="Call or answer">Call</button>
-          <button class="key mic" id="micBtn" aria-label="Hold to speak" disabled>Hold to speak</button>
-          <button class="key hang" id="hangBtn" aria-label="End call" disabled>End</button>
-        </div>
-        <div class="keypad" id="keypad">
-          <button class="key" data-d="1">1</button><button class="key" data-d="2">2<small>abc</small></button><button class="key" data-d="3">3<small>def</small></button>
-          <button class="key" data-d="4">4<small>ghi</small></button><button class="key" data-d="5">5<small>jkl</small></button><button class="key" data-d="6">6<small>mno</small></button>
-          <button class="key" data-d="7">7<small>pqrs</small></button><button class="key" data-d="8">8<small>tuv</small></button><button class="key" data-d="9">9<small>wxyz</small></button>
-          <button class="key" data-d="*">*</button><button class="key" data-d="0">0</button><button class="key" data-d="#">#</button>
+          <div class="bezel">
+            <div class="lcd" id="lcd" data-backlight="on" data-mode="" aria-live="polite" aria-atomic="true">
+              <div class="lcd-status">
+                <span class="ico" id="icoSignal" aria-hidden="true"></span>
+                <span class="lcd-lang" id="lcdLang"></span>
+                <span class="lcd-rec" id="lcdRec" hidden>●REC</span>
+                <span class="ico" id="icoBattery" aria-hidden="true"></span>
+              </div>
+              <div class="lcd-body" id="lcdBody"></div>
+              <span class="lcd-arrow up" id="arrowUp" aria-hidden="true" hidden>▲</span>
+              <span class="lcd-arrow down" id="arrowDown" aria-hidden="true" hidden>▼</span>
+              <div class="lcd-soft" aria-hidden="true"><span id="softLLabel"></span><span id="softRLabel"></span></div>
+            </div>
+          </div>
+
+          <div class="navrow">
+            <button class="key soft" id="softL" aria-label="Left softkey"><span class="soft-mark" aria-hidden="true">⌐</span></button>
+            <div class="nav" role="group" aria-label="Navigation key">
+              <button class="nav-up" id="navUp" aria-label="Scroll up">▲</button>
+              <span class="nav-diamond" aria-hidden="true">◆</span>
+              <button class="nav-down" id="navDown" aria-label="Scroll down">▼</button>
+            </div>
+            <button class="key soft" id="softR" aria-label="Right softkey"><span class="soft-mark" aria-hidden="true">C</span></button>
+          </div>
+
+          <div class="callrow">
+            <button class="key call" id="callBtn" aria-label="Call">CALL</button>
+            <button class="key end" id="endBtn" aria-label="End call">END</button>
+          </div>
+
+          <div class="keypad" id="keypad">
+            <button class="key" data-d="1" aria-label="Key 1, ask again">1<small>&nbsp;</small></button>
+            <button class="key" data-d="2" aria-label="Key 2, repeat">2<small>abc</small></button>
+            <button class="key" data-d="3" aria-label="Key 3, change language">3<small>def</small></button>
+            <button class="key" data-d="4" aria-label="Key 4">4<small>ghi</small></button>
+            <button class="key" data-d="5" aria-label="Key 5, simpler words">5<small>jkl</small></button>
+            <button class="key" data-d="6" aria-label="Key 6">6<small>mno</small></button>
+            <button class="key" data-d="7" aria-label="Key 7">7<small>pqrs</small></button>
+            <button class="key" data-d="8" aria-label="Key 8, language not listed">8<small>tuv</small></button>
+            <button class="key" data-d="9" aria-label="Key 9, end call">9<small>wxyz</small></button>
+            <button class="key" data-d="*" aria-label="Key star">*<small>&nbsp;</small></button>
+            <button class="key" data-d="0" aria-label="Key 0, menu">0<small>&nbsp;</small></button>
+            <button class="key" data-d="#" aria-label="Key hash">#<small>&nbsp;</small></button>
+          </div>
+
+          <div class="mic-holes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
       </div>
 
       <form class="typebox" id="typeForm" autocomplete="off">
-        <label for="typeInput">Or type the question</label>
+        <label for="typeInput">Type instead</label>
         <div class="typerow">
           <input id="typeInput" placeholder="e.g. My child has had a cough for two days." disabled>
           <button type="submit" id="typeSend" disabled>Ask</button>
@@ -54,18 +81,19 @@
       </form>
 
       <div class="scenarios" id="scenarios" hidden>
-        <p>Try a demo question</p>
+        <p>Demo questions</p>
         <div class="chips" id="scenarioChips"></div>
       </div>
 
-      <label class="toggle"><input type="checkbox" id="muteToggle"> Mute voice output</label>
+      <label class="toggle"><input type="checkbox" id="muteToggle"> Mute tones and voice</label>
+      <p class="kbd-note">Keyboard: 0–9 * #, Enter = Call, Esc = End, hold Space = Speak, arrows = scroll.</p>
     </section>
 
     <section class="panel" aria-label="What the system did">
       <nav class="tabs" role="tablist">
-        <button role="tab" aria-selected="true" data-tab="convo">Conversation</button>
+        <button role="tab" aria-selected="true" data-tab="convo">Call log</button>
         <button role="tab" aria-selected="false" data-tab="slip">Care slip</button>
-        <button role="tab" aria-selected="false" data-tab="langs">Languages</button>
+        <button role="tab" aria-selected="false" data-tab="langs">Network</button>
       </nav>
 
       <div class="tab" id="tab-convo">
@@ -90,9 +118,9 @@
       </div>
 
       <div class="tab" id="tab-langs" hidden>
-        <p class="lead">What each language can do on this line right now. Honest gaps are listed so nobody is promised a voice conversation that cannot happen.</p>
+        <p class="lead">Network coverage: what each language can do on this line right now. Honest gaps are listed so nobody is promised a voice conversation that cannot happen.</p>
         <table class="langs">
-          <thead><tr><th>Language</th><th>Key</th><th>Status</th><th>Hear</th><th>Speak</th></tr></thead>
+          <thead><tr><th>Language</th><th>Key</th><th>Signal</th><th>Hear</th><th>Speak</th></tr></thead>
           <tbody id="langRows"></tbody>
         </table>
       </div>
