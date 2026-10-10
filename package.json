@@ -1,0 +1,10 @@
+{
+  "name": "aarogya-sathi",
+  "private": true,
+  "scripts": {
+    "test:camera": "node frontend/tests/camera_e2e.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.0"
+  }
+}

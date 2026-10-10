@@ -15,6 +15,9 @@ import mimetypes
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app import config, photo  # noqa: E402
@@ -39,7 +42,9 @@ async def main(args: list[str]) -> int:
     langs = [a for a in args if a != path] or ["en-IN", "hi-IN", "as-IN"]
     data, ctype = (Path(path).read_bytes(), mimetypes.guess_type(path)[0] or "image/jpeg") if path else synthetic()
     ok = True
-    for lang in langs:
+    for i, lang in enumerate(langs):
+        if i > 0:
+            await asyncio.sleep(2)
         r = await photo.analyze(data, ctype, lang)
         print(f"\n== {lang}: {'OK' if r['ok'] else 'FAILED'}  ({r['timings_ms']})")
         if r["ok"]:

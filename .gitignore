@@ -9,3 +9,4 @@ frontend/prompts/
 backend/data/
 .coverage
 *.db
+node_modules/
