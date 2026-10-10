@@ -147,8 +147,9 @@
     el.up.hidden = b.scrollTop <= 0;
     el.down.hidden = b.scrollTop + b.clientHeight >= b.scrollHeight - 2;
   }
+  el.body.addEventListener("scroll", updateArrows);
   function scrollBy(dir) {
-    const lh = 26;
+    const lh = 28;
     el.body.scrollTop += dir * lh;
     updateArrows();
   }
@@ -222,6 +223,7 @@
       processingWait: "कृपया प्रतीक्षा करें",
       responseTitle: "उत्तर",
       nextPrompt: "अगला सवाल बोलने के लिए – दबाएँ",
+      scrollDownHint: "आगे पढ़ने के लिए ▼ दबाएँ",
       micDeniedTitle: "माइक बंद है",
       micDeniedMsg: "माइक्रोफ़ोन की अनुमति नहीं मिली।\nनीचे दिए गए बॉक्स में सवाल टाइप करें।",
       menuSpoken: "हिंदी के लिए 1 दबाएँ। अंग्रेजी के लिए 2 दबाएँ। असमिया के लिए 3 दबाएँ। नज़दीकी अस्पताल के लिए 4 दबाएँ। बोलने के लिए डैश बटन दबाएँ। मेनू दोबारा सुनने के लिए स्टार दबाएँ। रोकने के लिए एंड बटन दबाएँ।",
@@ -243,6 +245,7 @@
       processingWait: "অনুগ্ৰহ কৰি অপেক্ষা কৰক",
       responseTitle: "উত্তৰ",
       nextPrompt: "পৰৱৰ্তী প্ৰশ্নৰ বাবে – টিপক",
+      scrollDownHint: "অধিক পঢ়িবলৈ ▼ টিপক",
       micDeniedTitle: "মাইক সংযোগ নাই",
       micDeniedMsg: "মাইক্ৰ'ফোন ব্যৱহাৰৰ অনুমতি নাই।\nতলৰ বাকচত প্ৰশ্নটো লিখক।",
       menuSpoken: "হিন্দীৰ বাবে 1 টিপক। ইংৰাজীৰ বাবে 2 টিপক। অসমীয়াৰ বাবে 3 টিপক। ওচৰৰ হাস্পতালৰ বাবে 4 টিপক। কথা ক'বলৈ ডেশ্ব টিপক। মেনু আকৌ শুনিবলৈ ষ্টাৰ টিপক। বন্ধ কৰিবলৈ এণ্ড টিপক।",
@@ -264,6 +267,7 @@
       processingWait: "Please wait",
       responseTitle: "RESPONSE",
       nextPrompt: "Press – (dash) to speak next",
+      scrollDownHint: "Press ▼ to read more",
       micDeniedTitle: "Mic Blocked",
       micDeniedMsg: "Microphone access was denied.\nYou can type your question in the input box below.",
       menuSpoken: "Press 1 for Hindi. Press 2 for English. Press 3 for Assamese. Press 4 for nearby hospitals. Press dash to speak. Press star to replay the main menu. Press END to stop and return to the main menu.",
@@ -404,6 +408,15 @@
       const i18n = I18N[l] || I18N["en-IN"];
       const head = `<div class="heading">${esc(i18n.responseTitle || "RESPONSE")}</div><div style="font-size:0.75rem;opacity:0.85;margin-bottom:2px">${esc(i18n.nextPrompt || "Press – (dash) to speak next")}</div>`;
       lcd({ html: head, type: turn.answer.text, lang: turn.answer.lang, mode: "response" });
+      setTimeout(() => {
+        if (el.body.scrollHeight > el.body.clientHeight + 4) {
+          const hint = document.createElement("div");
+          hint.className = "lcd-scroll-hint";
+          hint.textContent = i18n.scrollDownHint || "Press ▼ to read more";
+          el.body.appendChild(hint);
+          updateArrows();
+        }
+      }, 50);
     }
     softkeysForState();
     setControls();
@@ -959,14 +972,22 @@
       <p class="turn-time" style="margin:0">${timeStamp()} · ${esc(langCode(S.lang))}</p>
       <div>
         <p class="said" lang="${langAttr(S.lang)}">“${esc(questionText)}”</p>
-        ${t.english && S.lang !== "en-IN" ? `<p class="said-meta">English pivot for reasoning: ${esc(t.english)}</p>` : ""}
+        ${t.english && S.lang !== "en-IN" ? `
+          <details class="said-pivot">
+            <summary>English translation</summary>
+            <p class="said-meta" style="margin:2px 0 0">English pivot: ${esc(t.english)}</p>
+          </details>` : ""}
       </div>
       <div class="flag ${lvl}"><b>${esc(flagText)}</b>${matches ? `<br>Matched: ${esc(matches)}` : ""}</div>
       ${t.medicine && t.medicine.request ? `<div class="flag med"><b>Medicine Safety:</b> Prescriptions and dosage requests are strictly filtered. General safety guidance provided.</div>` : ""}
       <div>
         <p style="margin:0 0 .35rem"><span class="source">${esc(t.answer.source || "Live AI")}</span>${t.voice && t.voice.provider ? `<span class="source" style="background:#EAF3EC;color:#2F7D45">${esc(t.voice.provider)}</span>` : ""}</p>
         <p class="answer" lang="${langAttr(t.answer.lang || S.lang)}">${esc(t.answer.text)}</p>
-        ${t.answer.english && t.answer.lang !== "en-IN" ? `<p class="answer-en">English: ${esc(t.answer.english)}</p>` : ""}
+        ${t.answer.english && t.answer.lang !== "en-IN" ? `
+          <details class="said-pivot" style="margin-top:6px">
+            <summary>English text</summary>
+            <p class="answer-en" style="margin:2px 0 0">English: ${esc(t.answer.english)}</p>
+          </details>` : ""}
       </div>
       ${steps.length ? `<div class="timing" aria-label="Latency breakdown">
         <div class="timing-bar">${steps.map(([k, v]) => `<span style="--c:${STEP_COLORS[k] || "#888"};width:${Math.max(2, Math.round((v / total) * BLOCKS)) * 6}px" title="${STEP_NAMES[k]}: ${v} ms"></span>`).join("")}</div>
