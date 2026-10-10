@@ -11,6 +11,7 @@ The image is processed in memory and discarded; it is never logged or stored.
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 from contextlib import contextmanager
 from typing import Optional
@@ -90,7 +91,9 @@ async def analyze(data: bytes, content_type: str, lang: str, note: str = "") -> 
 
     # 4. Output safety: no doses anywhere; urgency from the model can only add caution.
     def clean(t: str) -> str:
-        return medicine.strip_doses(t)[0]
+        s = medicine.strip_doses(t)[0] if t else ""
+        return re.sub(r"^\s*\(mock(?:\s+[a-z]{2}(?:-[A-Z]{2})?)?\)\s*:?\s*", "", s, flags=re.I).strip()
+
     english = {
         "observation": clean(result.observation),
         "possible_explanations": [clean(t) for t in result.possible_explanations],
@@ -114,6 +117,7 @@ async def analyze(data: bytes, content_type: str, lang: str, note: str = "") -> 
                  *english["recommended_next_steps"]]
         translated, note_lang = await _to_lang(lists, lang)
         disclaimer = await prompts.get("photo_disclaimer", lang)
+    translated = [clean(t) for t in translated]
     shown_lang = lang if note_lang is None else "en-IN"
     n1, n2 = len(english["possible_explanations"]), len(english["follow_up_questions"])
     localized = {
@@ -125,17 +129,26 @@ async def analyze(data: bytes, content_type: str, lang: str, note: str = "") -> 
         "disclaimer": disclaimer["text"] if disclaimer["lang"] == shown_lang else english["disclaimer"],
     }
 
-    # 6. A short spoken summary: emergency line first when needed, then what is seen and what to do.
+    # 6. Concise user-facing answer (~25-45 words).
+    # Structure: What I see (1 sentence) + What to do (1-2 actions) + Warning (if relevant) + Question (<=1, if useful).
+    # Strictly omits debug logs, model names, possible explanations, and disclaimer from spoken text.
     parts: list[str] = []
     if out["triage"]["level"] == "emergency":
         em = await prompts.emergency_message("emergency", [], lang)
         if em["lang"] == shown_lang:
-            parts.append(em["text"])
-    parts.append(localized["observation"])
-    parts += localized["possible_explanations"][:1] + localized["recommended_next_steps"][:2]
-    parts += localized["follow_up_questions"][:1]
-    parts.append(localized["disclaimer"])
-    spoken = " ".join(p for p in parts if p)
+            parts.append(clean(em["text"]))
+
+    obs = clean(localized["observation"])
+    if obs:
+        parts.append(obs)
+
+    steps = [clean(s) for s in localized["recommended_next_steps"][:2] if s]
+    parts.extend(steps)
+
+    questions = [clean(q) for q in localized["follow_up_questions"][:1] if q]
+    parts.extend(questions)
+
+    spoken = " ".join(p for p in parts if p).strip()
 
     out.update(ok=True, vision=localized, english=english,
                answer={"text": spoken, "lang": shown_lang, "source": "vision", "model": result.model,
@@ -143,3 +156,4 @@ async def analyze(data: bytes, content_type: str, lang: str, note: str = "") -> 
     with _timed(ms, "voice"):
         out["voice"] = await pipeline.speak(None, spoken, shown_lang)
     return out
+

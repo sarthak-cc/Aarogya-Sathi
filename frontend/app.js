@@ -493,18 +493,97 @@
     end: () => beep([480, 620], 0, 0.45),
   };
 
+  function cleanMock(str) {
+    if (!str) return "";
+    return String(str).replace(/\(mock(?:\s+[a-z]{2}-[A-Z]{2})?\)\s*:?\s*/gi, "").trim();
+  }
+
   // ---------- Voice playback ----------
+  let currentAudioVoice = null;
+
   function stopAudio() {
     if (el.player) {
       el.player.pause();
+      try { el.player.currentTime = 0; } catch (_) {}
       el.player.removeAttribute("src");
     }
   }
-  function playVoice(voice) {
+
+  function clearAutoplayPrompt() {
+    if (el.body) {
+      const existingLcd = el.body.querySelector(".lcd-tap-hear");
+      if (existingLcd) existingLcd.remove();
+    }
+    const pulsingBtn = document.querySelector(".tap-to-hear-pulse");
+    if (pulsingBtn) {
+      pulsingBtn.textContent = "Hear again";
+      pulsingBtn.classList.remove("tap-to-hear-pulse");
+    }
+  }
+
+  function showAutoplayPrompt(voice, langCode, targetCard) {
     if (!voice || !voice.audio_url || el.mute.checked) return;
+    const l = langCode || (S.lastTurn && S.lastTurn.answer && S.lastTurn.answer.lang) || S.lang || "en-IN";
+    const tapLabels = {
+      "hi-IN": "सुनें (Tap to hear)",
+      "as-IN": "শুনক (Tap to hear)",
+      "en-IN": "Tap to hear",
+      "bn-IN": "শুনুন (Tap to hear)",
+    };
+    const label = tapLabels[l] || tapLabels[S.lang] || "Tap to hear";
+
+    // 1. Highlight button on Call log card
+    const card = targetCard || (el.turns ? el.turns.querySelector("li.turn") : null);
+    if (card) {
+      const hearBtn = card.querySelector('[data-act="hear"], [data-act="repeat"]');
+      if (hearBtn) {
+        hearBtn.innerHTML = `▶ <strong>${esc(label)}</strong>`;
+        hearBtn.classList.add("tap-to-hear-pulse");
+      }
+    }
+
+    // 2. Add clickable button on Nokia LCD
+    if (el.body && !el.body.querySelector(".lcd-tap-hear")) {
+      const hint = document.createElement("div");
+      hint.className = "lcd-tap-hear";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = `▶ ${label}`;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        playVoice(voice);
+        clearAutoplayPrompt();
+      };
+      hint.appendChild(btn);
+      el.body.appendChild(hint);
+      updateArrows();
+    }
+  }
+
+  function playVoice(voice, { onBlocked, onPlay } = {}) {
+    if (!voice || !voice.audio_url) return;
+    currentAudioVoice = voice;
+    if (el.mute.checked) return;
     stopAudio();
-    el.player.src = voice.audio_url;
-    el.player.play().catch(() => {});
+
+    const audioSrc = voice.audio_url.startsWith("http")
+      ? voice.audio_url
+      : (window.location.origin + (voice.audio_url.startsWith("/") ? "" : "/") + voice.audio_url);
+
+    el.player.src = audioSrc;
+    try { el.player.load(); } catch (_) {}
+
+    const p = el.player.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        if (onPlay) onPlay();
+        clearAutoplayPrompt();
+      }).catch((err) => {
+        console.warn("Audio playback blocked by browser policy:", err);
+        if (onBlocked) onBlocked(err);
+        else showAutoplayPrompt(voice);
+      });
+    }
   }
 
   // ---------- Controls ----------
@@ -575,8 +654,12 @@
   }
 
   async function simpler() {
+    if (S.lastTurn && S.lastTurn.question && S.lastTurn.question.text === camT("heading")) {
+      return repeat();
+    }
     if (!S.convId || !S.lastTurn || S.busy) return;
     stopAudio();
+    clearAutoplayPrompt();
     S.busy = true; setControls();
     screenProcessing("Simpler words");
     try {
@@ -590,6 +673,7 @@
   function repeat() {
     if (!S.lastTurn) return;
     stopAudio();
+    clearAutoplayPrompt();
     screenAnswer(S.lastTurn, { animate: false });
     if (S.lastTurn.voice) playVoice(S.lastTurn.voice);
   }
@@ -953,9 +1037,16 @@
     S.phase = isEmerg ? "emergency" : "answered";
     screenAnswer(turn);
     if (isEmerg) sfx.alert(); else sfx.blip();
-    if (turn.voice) playVoice(turn.voice);
+    const cardEl = turnElement(turn);
     el.convoEmpty.hidden = true;
-    el.turns.prepend(turnElement(turn));
+    el.turns.prepend(cardEl);
+    if (turn.voice) {
+      playVoice(turn.voice, {
+        onBlocked: () => {
+          showAutoplayPrompt(turn.voice, turn.answer && turn.answer.lang, cardEl);
+        }
+      });
+    }
     setControls();
   }
 
@@ -970,7 +1061,7 @@
     }[lvl] || "Safety check complete.";
 
     const matches = (t.triage && t.triage.matches) ? t.triage.matches.map((m) => m.label).join(", ") : "";
-    const questionText = t.question ? t.question.text : (t.transcript || "Question");
+    const questionText = cleanMock(t.question ? t.question.text : (t.transcript || "Question"));
     const steps = Object.entries(t.timings_ms || {}).filter(([k]) => STEP_NAMES[k]);
     const total = steps.reduce((a, [, v]) => a + v, 0) || 1;
     const BLOCKS = 48;
@@ -982,18 +1073,18 @@
         ${t.english && S.lang !== "en-IN" ? `
           <details class="said-pivot">
             <summary>English translation</summary>
-            <p class="said-meta" style="margin:2px 0 0">English pivot: ${esc(t.english)}</p>
+            <p class="said-meta" style="margin:2px 0 0">English pivot: ${esc(cleanMock(t.english))}</p>
           </details>` : ""}
       </div>
       <div class="flag ${lvl}"><b>${esc(flagText)}</b>${matches ? `<br>Matched: ${esc(matches)}` : ""}</div>
       ${t.medicine && t.medicine.request ? `<div class="flag med"><b>Medicine Safety:</b> Prescriptions and dosage requests are strictly filtered. General safety guidance provided.</div>` : ""}
       <div>
         <p style="margin:0 0 .35rem"><span class="source">${esc(t.answer.source || "Live AI")}</span>${t.voice && t.voice.provider ? `<span class="source" style="background:#EAF3EC;color:#2F7D45">${esc(t.voice.provider)}</span>` : ""}</p>
-        <p class="answer" lang="${langAttr(t.answer.lang || S.lang)}">${esc(t.answer.text)}</p>
+        <p class="answer" lang="${langAttr(t.answer.lang || S.lang)}">${esc(cleanMock(t.answer.text))}</p>
         ${t.answer.english && t.answer.lang !== "en-IN" ? `
           <details class="said-pivot" style="margin-top:6px">
             <summary>English text</summary>
-            <p class="answer-en" style="margin:2px 0 0">English: ${esc(t.answer.english)}</p>
+            <p class="answer-en" style="margin:2px 0 0">English: ${esc(cleanMock(t.answer.english))}</p>
           </details>` : ""}
       </div>
       ${steps.length ? `<div class="timing" aria-label="Latency breakdown">
@@ -1006,12 +1097,16 @@
         ${lvl === "emergency" ? '<button type="button" class="find-help" data-act="hospital">Find nearest hospital</button>' : ""}
       </div>`;
 
-    li.querySelector('[data-act="repeat"]').onclick = () => { repeat(); };
+    li.querySelector('[data-act="repeat"]').onclick = () => {
+      clearAutoplayPrompt();
+      repeat();
+    };
     li.querySelector('[data-act="simpler"]').onclick = () => { simpler(); };
     const hBtn = li.querySelector('[data-act="hospital"]');
     if (hBtn) hBtn.onclick = () => goLocation();
     return li;
   }
+
 
   function facilityItem(f, first) {
     return `<li class="facility${first ? " nearest" : ""}">
@@ -1327,45 +1422,72 @@
     const v = r.vision, a = r.answer, isEm = r.triage && r.triage.level === "emergency";
     S.phase = isEm ? "emergency" : "answered";
     S.lastTurn = { answer: a, voice: r.voice, triage: r.triage, question: { text: camT("heading") }, timings_ms: r.timings_ms };
-    const body = v ? v.observation : a.text;
-    lcd({ html: isEm ? `<div class="inv">${pix("alert")}<span>! ${esc(camT("heading"))}</span></div>` : heading(camT("heading")),
-      type: isEm ? a.text : `${body}${v && v.recommended_next_steps[0] ? " " + v.recommended_next_steps[0] : ""}`,
-      lang: a.lang, mode: isEm ? "emergency" : "", assertive: isEm });
+    const head = isEm ? `<div class="inv">${pix("alert")}<span>! ${esc(camT("heading"))}</span></div>` : heading(camT("heading"));
+    const displayText = cleanMock((a && a.text) ? a.text : (v ? v.observation : ""));
+    lcd({ html: head, type: displayText, lang: a.lang, mode: isEm ? "emergency" : "response", assertive: isEm });
+
+    setTimeout(() => {
+      if (el.body && el.body.scrollHeight > el.body.clientHeight + 4) {
+        const i18n = I18N[a.lang] || I18N[S.lang] || I18N["en-IN"];
+        const hint = document.createElement("div");
+        hint.className = "lcd-scroll-hint";
+        hint.textContent = i18n.scrollDownHint || "Press ▼ to read more";
+        el.body.appendChild(hint);
+        updateArrows();
+      }
+    }, 50);
+
     if (isEm) { flashAmber(); sfx.alert(); } else sfx.blip();
     softkeysForState(); setControls();
-    if (r.voice) playVoice(r.voice);
+
+    const cardEl = photoElement(r);
     el.convoEmpty.hidden = true;
-    el.turns.prepend(photoElement(r));
+    el.turns.prepend(cardEl);
+
+    if (r.voice && r.voice.audio_url) {
+      playVoice(r.voice, {
+        onBlocked: () => {
+          showAutoplayPrompt(r.voice, a.lang || S.lang, cardEl);
+        }
+      });
+    }
   }
 
   function photoElement(r) {
     const li = document.createElement("li");
     li.className = "turn photo";
     const v = r.vision, a = r.answer, lvl = (r.triage && r.triage.level) || "none";
-    const list = (items) => items && items.length ? `<ul class="photo-list" lang="${langAttr(a.lang)}">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+    const list = (items) => items && items.length ? `<ul class="photo-list" lang="${langAttr(a.lang)}">${items.map((x) => `<li>${esc(cleanMock(x))}</li>`).join("")}</ul>` : "";
     const flagText = { none: "Photo check: no urgent signs reported by the AI.", urgent: "Photo check: see a health worker within a day.",
       emergency: "Possible emergency. Call 112 now." }[lvl] || "";
     li.innerHTML = `
       <p class="turn-time" style="margin:0">${timeStamp()} · ${esc(langCode(S.lang))} · PHOTO</p>
       <div class="flag ${lvl}"><b>${esc(flagText)}</b>${r.triage && r.triage.source ? `<br><small>Source: ${r.triage.source === "rules" ? "safety rules" : "AI photo check"}</small>` : ""}</div>
       ${v ? `
-        <div><b>What the photo shows</b><p class="answer" lang="${langAttr(a.lang)}">${esc(v.observation)}</p></div>
+        <div><b>What the photo shows</b><p class="answer" lang="${langAttr(a.lang)}">${esc(cleanMock(v.observation))}</p></div>
         ${v.possible_explanations.length ? `<div><b>Possible explanations (not a diagnosis)</b>${list(v.possible_explanations)}</div>` : ""}
         ${v.recommended_next_steps.length ? `<div><b>What you can do</b>${list(v.recommended_next_steps)}</div>` : ""}
         ${v.follow_up_questions.length ? `<div><b>Questions</b>${list(v.follow_up_questions)}</div>` : ""}
         ${v.image_quality === "insufficient" ? '<p class="voice-note">The photo was not clear enough to assess. Try again in good light, closer.</p>' : ""}
-        <p class="voice-note" lang="${langAttr(a.lang)}">${esc(v.disclaimer)}</p>` : `<p class="answer" lang="${langAttr(a.lang)}">${esc(a.text)}</p>`}
-      ${a.language_note ? `<p class="voice-note">${esc(a.language_note)}</p>` : ""}
-      ${r.voice && r.voice.note ? `<p class="voice-note">${esc(r.voice.note)}</p>` : ""}
+        <p class="voice-note" lang="${langAttr(a.lang)}">${esc(cleanMock(v.disclaimer))}</p>` : `<p class="answer" lang="${langAttr(a.lang)}">${esc(cleanMock(a.text))}</p>`}
+      ${a.language_note ? `<p class="voice-note">${esc(cleanMock(a.language_note))}</p>` : ""}
+      ${r.voice && r.voice.note ? `<p class="voice-note">${esc(cleanMock(r.voice.note))}</p>` : ""}
       <p class="voice-note">${esc(r.privacy)}${a.model ? ` · ${esc(a.model)}` : ""}</p>
       <div class="answer-actions">
         ${r.voice && r.voice.audio_url ? '<button type="button" data-act="hear">Hear again</button>' : ""}
         ${r.offer_facilities ? '<button type="button" class="find-help" data-act="hospital">Find nearest hospital</button>' : ""}
       </div>`;
-    const hear = li.querySelector('[data-act="hear"]'); if (hear) hear.onclick = () => playVoice(r.voice);
+    const hear = li.querySelector('[data-act="hear"]');
+    if (hear) {
+      hear.onclick = () => {
+        clearAutoplayPrompt();
+        playVoice(r.voice);
+      };
+    }
     const hosp = li.querySelector('[data-act="hospital"]'); if (hosp) hosp.onclick = () => goLocation();
     return li;
   }
+
 
   cam.openBtn.onclick = () => openCamera();
   cam.flashBtn.onclick = () => setFlash(!C.flash);

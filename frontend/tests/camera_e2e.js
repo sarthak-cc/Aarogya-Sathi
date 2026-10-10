@@ -68,9 +68,9 @@ const status = (p) => p.locator("#camLive").innerText();
   check("camera controls hidden after result", !(await p.isVisible("#camControls")));
   await p.waitForTimeout(1300); // let the LCD type-in finish
   const lcdText = (await p.locator("#lcd").innerText()).replace(/\s+/g, " ");
-  check("LCD shows photo result", /PHOTO CHECK/.test(lcdText) && /\(mock\)/.test(lcdText), lcdText.slice(0, 120));
+  check("LCD shows photo result", /PHOTO CHECK/.test(lcdText) && !/\(mock\)/i.test(lcdText), lcdText.slice(0, 120));
   const card = (await p.locator("#turns > li").first().innerText()).replace(/\s+/g, " ");
-  check("call log photo card", /PHOTO/.test(card) && /not a diagnosis/i.test(card) && /Hear again/.test(card), card.slice(0, 160));
+  check("call log photo card", /PHOTO/.test(card) && /not a diagnosis/i.test(card) && /Hear again/.test(card) && !/\(mock\)/i.test(card), card.slice(0, 160));
   check("voice played", (await p.evaluate(() => document.getElementById("player").getAttribute("src") || "")).includes("/api/audio/"));
   check("tracks stopped after result", (await liveTracks(p)) === 0);
   await p.screenshot({ path: `${out}/c3-result.png` });
@@ -104,7 +104,7 @@ const status = (p) => p.locator("#camLive").innerText();
   await p.click("#camCapture"); await p.waitForTimeout(300); await p.click("#camAnalyze");
   await p.waitForFunction(() => document.querySelector("#turns > li.photo"), null, { timeout: 15000 });
   const hiCard = await p.locator("#turns > li.photo").innerText();
-  check("Hindi analysis returned in Hindi", /निदान/.test(hiCard) && /\(mock hi-IN\)/.test(hiCard), hiCard.replace(/\s+/g, " ").slice(0, 120));
+  check("Hindi analysis returned in Hindi", /निदान/.test(hiCard) && !/\(mock/i.test(hiCard), hiCard.replace(/\s+/g, " ").slice(0, 120));
   check("no JS errors (Hindi flow)", p.errs.length === 0, p.errs.join(" | "));
   await b.close();
 

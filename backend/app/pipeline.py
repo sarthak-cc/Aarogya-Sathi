@@ -8,6 +8,7 @@ service is missing or fails, the turn says so. Each stage is timed.
 """
 from __future__ import annotations
 
+import re
 import time
 from contextlib import contextmanager
 from typing import Optional
@@ -127,6 +128,7 @@ async def ask(conv: Conversation, text: str, level: str = "standard", heard: Opt
 
     # 5. Output validation: no doses, ever
     answer_en, removed = medicine.strip_doses(result.text)
+    answer_en = re.sub(r"^\s*\(mock(?:\s+[a-z]{2}(?:-[A-Z]{2})?)?\)\s*:?\s*", "", answer_en, flags=re.I).strip()
     turn["medicine"]["dose_removed"] = removed
 
     # 6. Back to the user's language
@@ -135,13 +137,15 @@ async def ask(conv: Conversation, text: str, level: str = "standard", heard: Opt
     if lang != "en-IN":
         try:
             with timer.run("translate_out"):
-                answer["text"] = await translate.from_english(answer_en, lang)
+                tr = await translate.from_english(answer_en, lang)
+                answer["text"] = re.sub(r"^\s*\(mock(?:\s+[a-z]{2}(?:-[A-Z]{2})?)?\)\s*:?\s*", "", tr, flags=re.I).strip()
         except ProviderError as exc:
             answer["lang"] = "en-IN"
             answer["language_note"] = f"Shown in English because translation failed: {exc.public()['message']}"
     turn["answer"] = answer
     conv.remember(english or text, answer_en)
     return await _finish(conv, turn, timer)
+
 
 
 async def _finish(conv: Conversation, turn: dict, timer: _Timer) -> dict:
