@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend ./backend
 COPY frontend ./frontend
 WORKDIR /app/backend
-RUN useradd -m saathi
+RUN useradd -m saathi && mkdir -p /app/backend/data && chown saathi /app/backend/data
 USER saathi
 EXPOSE 8000
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]

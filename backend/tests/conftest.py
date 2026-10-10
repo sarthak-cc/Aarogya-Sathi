@@ -1,19 +1,32 @@
+"""Shared fixtures. All provider tests here use MOCKED HTTP (no network, no real keys).
+Real-provider checks live in scripts/verify_live.py and need real keys."""
+import base64
+import json
+
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app import config, main, sessions
+from app import config, facilities, main, sessions
+from app.providers import translate
+
+KEYS = ["SARVAM_API_KEY", "LLM_API_KEY", "GROQ_API_KEY", "PARLER_TTS_URL", "MMS_TTS_LANGS"]
 
 
 @pytest.fixture(autouse=True)
-def demo_settings(monkeypatch):
-    """Every test starts in demo mode (no keys) unless it opts into live mocks."""
-    for var in ["SARVAM_API_KEY", "LLM_API_KEY", "GROQ_API_KEY", "PARLER_TTS_URL"]:
+def clean_settings(monkeypatch):
+    for var in KEYS:
         monkeypatch.setenv(var, "")
-    monkeypatch.setenv("OSM_ENABLED", "false")  # tests never touch the network
+    monkeypatch.setenv("OSM_ENABLED", "false")
+    monkeypatch.setenv("DB_PATH", ":memory:")
+    monkeypatch.setenv("LLM_MODEL", "openai/gpt-oss-120b")
     config.reload_settings()
-    sessions._sessions.clear()
+    facilities.reset()
+    sessions.clear()
+    translate._cache.clear()
     main._hits.clear()
     yield
+    facilities.reset()
     config.reload_settings()
 
 
@@ -22,9 +35,63 @@ def client():
     return TestClient(main.app)
 
 
+def configure(monkeypatch, **env):
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    config.reload_settings()
+
+
+class MockHTTP:
+    """Routes outgoing provider requests to handlers by URL path suffix and records them."""
+
+    def __init__(self):
+        self.routes: dict[str, object] = {}
+        self.calls: list[httpx.Request] = []
+
+    def on(self, suffix, handler):
+        self.routes[suffix] = handler
+        return self
+
+    def paths(self):
+        return [r.url.path for r in self.calls]
+
+    def bodies(self, suffix):
+        return [json.loads(r.content) for r in self.calls if r.url.path.endswith(suffix)]
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.calls.append(request)
+        for suffix, handler in self.routes.items():
+            if request.url.path.endswith(suffix):
+                return handler(request) if callable(handler) else handler
+        return httpx.Response(404)
+
+
 @pytest.fixture
-def call(client):
-    """A started call with Assamese selected."""
-    cid = client.post("/api/calls/start").json()["call"]["id"]
-    client.post(f"/api/calls/{cid}/language", json={"digit": "1"})
-    return cid
+def http(monkeypatch):
+    mock = MockHTTP()
+    real = httpx.AsyncClient
+    monkeypatch.setattr("app.providers.client", lambda timeout=None: real(transport=httpx.MockTransport(mock)))
+    return mock
+
+
+def llm_reply(text):
+    return httpx.Response(200, json={"choices": [{"message": {"role": "assistant", "content": text}}]})
+
+
+def fake_translate(request):
+    body = json.loads(request.content)
+    if body["target_language_code"] == "en-IN":
+        return httpx.Response(200, json={"translated_text": f"EN[{body['input']}]"})
+    return httpx.Response(200, json={"translated_text": f"{body['target_language_code']}[{body['input']}]"})
+
+
+def fake_tts(_request):
+    return httpx.Response(200, json={"audios": [base64.b64encode(b"RIFFfake").decode()]})
+
+
+@pytest.fixture
+def live(monkeypatch, http):
+    """Groq + Sarvam 'configured' with mocked responses."""
+    configure(monkeypatch, LLM_API_KEY="test-groq", SARVAM_API_KEY="test-sarvam")
+    http.on("/translate", fake_translate).on("/text-to-speech", fake_tts)
+    return http

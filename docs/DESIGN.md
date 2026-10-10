@@ -1,3 +1,8 @@
+> **Superseded (October 2026).** The keypad-handset simulator described below was retired because it
+> suggested a real phone call that did not exist. The app is now a plain browser voice interface
+> (one big speak button) that keeps this palette, the LCD-green answer card and the Indic fonts.
+> Kept for design history only.
+
 # Aarogya Saathi: Retro Keypad Phone Design Spec
 
 ## 1. Concept

@@ -52,25 +52,29 @@ RULES: list[Rule] = [
         "breathless", "not breathing", "gasping", "choking", "lips turning blue", "blue lips",
         "साँस नहीं", "सांस नहीं", "साँस लेने में", "सांस लेने में", "सांस फूल", "साँस फूल",
         "উশাহ ল'ব নোৱা", "উশাহ লব নোৱা", "উশাহত কষ্ট", "উশাহ-নিশাহ", "শ্বাস নিতে কষ্ট", "শ্বাসকষ্ট",
-        "सास फेर्न", "सास लिन गाह्रो",
+        "सास फेर्न", "सास लिन गाह्रो", "শ্বাস নিতে পারছে না", "উশাহ বন্ধ", "दम घुट",
     )),
     Rule("chest_pain", "Chest pain or pressure", Level.EMERGENCY, _alts(
         "chest pain", "pain in chest", "pain in my chest", "chest pressure", "chest tightness", "heart attack",
-        "सीने में दर्द", "छाती में दर्द", "বুকুৰ বিষ", "বুকু বিষ", "বুকে ব্যথা", "छाती दुख",
+        "crushing chest", "chest is tight", "tight chest", "pain in left arm", "left arm pain",
+        "सीने में दर्द", "सीने में तेज दर्द", "सीने में तेज़ दर्द", "छाती में दर्द", "दिल का दौरा", "हार्ट अटैक",
+        "বুকুৰ বিষ", "বুকু বিষ", "বুকুত বিষ", "হাৰ্ট এটেক", "হৃদৰোগৰ আক্ৰমণ", "বুকে ব্যথা", "হার্ট অ্যাটাক",
+        "छाती दुख", "मुटुको दुखाइ",
     )),
     Rule("stroke", "Possible stroke signs", Level.EMERGENCY, _alts(
         "stroke", "face drooping", "face droop", "slurred speech", "speech is slurred", "can't speak",
         "cannot speak", "one side weak", "weakness on one side", "one side of the body", "paralysis",
-        "paralysed", "paralyzed", "लकवा", "पक्षाघात", "মুখ বেঁকা", "পক্ষাঘাত",
+        "paralysed", "paralyzed", "लकवा", "पक्षाघात", "मुँह टेढ़ा", "मुंह टेढ़ा", "बोल नहीं पा",
+        "মুখ বেঁকা", "মুখ বেঁকে", "পক্ষাঘাত", "এফালে শৰীৰ",
     )),
     Rule("unconscious", "Unconscious or not responding", Level.EMERGENCY, _alts(
         "unconscious", "not waking", "won't wake", "will not wake", "fainted", "passed out", "unresponsive",
-        "not responding", "बेहोश", "होश नहीं", "অজ্ঞান", "অচেতন", "बेहोस",
+        "not responding", "collapsed", "बेहोश", "होश नहीं", "অজ্ঞান", "অচেতন", "চেতনা হেৰুৱাইছে", "बेहोस",
     )),
     Rule("bleeding", "Severe bleeding", Level.EMERGENCY, _alts(
         "heavy bleeding", "bleeding a lot", "won't stop bleeding", "not stop bleeding", "not stopping bleeding",
         "severe bleeding", "vomiting blood", "blood vomit", "बहुत खून", "खून नहीं रुक", "खून की उल्टी",
-        "বহুত তেজ", "তেজ বন্ধ হোৱা নাই", "অনেক রক্ত",
+        "खून बंद नहीं", "बहुत खून बह", "বহুত তেজ", "তেজ বন্ধ হোৱা নাই", "অনেক রক্ত", "রক্ত বন্ধ হচ্ছে না",
     )),
     Rule("seizure", "Fits / seizure", Level.EMERGENCY, _alts(
         "seizure", "convulsion", "having fits", "had fits", "fitting", "दौरा पड़", "मिर्गी", "মৃগী", "খিচুনি",
@@ -96,6 +100,16 @@ RULES: list[Rule] = [
             "दूध नहीं पी", "कुछ नहीं पी", "খাব পৰা নাই", "গাখীৰ খোৱা নাই",
         )
     )),
+    Rule("burns", "Serious burn", Level.EMERGENCY, _alts(
+        "severe burn", "badly burned", "badly burnt", "burned badly", "burnt badly", "big burn",
+        "बुरी तरह जल", "बहुत जल गया", "বেয়াকৈ পুৰি", "পুৰি গৈছে", "খারাপভাবে পুড়ে",
+    )),
+    Rule("injury", "Serious injury or accident", Level.EMERGENCY, _alts(
+        "road accident", "hit by a car", "hit by a vehicle", "hit by a bike", "fell from a height", "fell from the roof",
+        "head injury", "broken neck", "दुर्घटना", "एक्सीडेंट", "দুৰ্ঘটনা", "দুর্ঘটনা",
+    )),
+    Rule("drowning", "Drowning", Level.EMERGENCY, _alts("drowned", "drowning", "डूब गया", "डूब रहा", "পানীত ডুবি", "ডুবে গেছে")),
+    Rule("electric", "Electric shock", Level.EMERGENCY, _alts("electric shock", "electrocuted", "करंट लग", "কাৰেণ্ট লাগিল", "কারেন্ট লেগেছে")),
     # --- URGENT: needs a health worker/doctor soon, but not an ambulance ---
     Rule("fever_persistent", "Fever lasting 3+ days or very high fever", Level.URGENT, _alts(
         "fever for 3 days", "fever for three days", "fever for 4 days", "fever for four days",

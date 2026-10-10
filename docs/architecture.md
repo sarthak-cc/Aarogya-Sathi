@@ -1,74 +1,48 @@
 # Architecture
 
-## One pipeline, one front door today (a phone line plugs in later)
-
 ```
- Phone or laptop browser (mic over HTTPS) ──► REST API ──► FastAPI session + state machine ──► pipeline
- Keypad phone line (planned) ──► telephony adapter ──┘   needs a paid provider (Twilio, Exotel...)
-
- pipeline (backend/app/pipeline.py)
-
-  audio ─► STT (Sarvam Saaras v4, medical keyterms) ─► READ-BACK "I heard X, press 1"
-         ─► translate → English (Sarvam Translate)
-         ─► SAFETY TRIAGE (rules on native + English text)
-               ├─ emergency / crisis ─► fixed script + first-aid line, LLM never called
-               │      └─► ask location (GPS, or village / town / PIN / landmark, or keypad PIN)
-               │             ─► seed hospital list (SQLite) + OpenStreetMap ─► nearest help + 108/112
-               └─ otherwise ─► retrieve vetted cards ─► LLM in English (Groq)
-                      ─► DOSE FILTER (any amount/frequency → vetted card instead) ─► translate back
-         ─► TTS (Parler for as/brx/mni/ne, Sarvam Bulbul for hi/bn/en; fixed prompts pre-rendered)
+Browser (phone or laptop, HTTPS)
+  microphone ─► MediaRecorder ─► 16 kHz mono WAV ─┐            typed text ─┐
+                                                  ▼                        ▼
+FastAPI  /api/conversations/{id}/speech ─► STT (Sarvam Saaras v3, or Groq Whisper)
+                                            │
+                                            ▼  /ask
+         translate → English (Sarvam Translate)          [skipped for English]
+                                            │
+         SAFETY RULES on native + English text (triage.py), BEFORE any AI
+            ├─ emergency / crisis ─► fixed script + first-aid line (prompts.py), no LLM
+            │                          └─► "Find a nearby hospital" (location only on request)
+            └─ routine ─► LLM (Groq, openai/gpt-oss-120b) with short history + reference notes
+                           ├─ TRIAGE tag: EMERGENCY can upgrade to the emergency script (second net)
+                           ├─ dose filter (medicine.py): sentences stating amounts are removed
+                           └─► translate back ─► TTS (Sarvam Bulbul; MMS or Parler for as/ne/brx/mni)
+                                                    └─► audio served from memory, played in the browser
 ```
 
-## Why English in the middle
-Open LLMs on free tiers write weak Assamese/Bodo/Manipuri but reason well in English.
-Sarvam Translate covers all NER scheduled languages, so the LLM thinks in English and
-the caller hears their own language. The triage rules also get an English copy,
-while native-language keywords still catch red flags if translation fails.
+## Honesty rules in code
+- No scripted routine answers exist. A missing key, quota, timeout or outage returns a
+  `ProviderError` with a `kind` (`not_configured`, `auth`, `rate_limited`, `timeout`,
+  `unavailable`, `bad_response`, `unsupported`) that the UI shows in plain words.
+- An answer that could not be translated is shown in English **with a label saying so**.
+- A language with no voice gets a text answer and a note, never another language's voice.
+- The language picker is built from `languages.capability()`: what providers document,
+  what is configured, and what `scripts/verify_live.py` has passed.
+- Facility emergency capability is only what the data says (`emergency=yes` in OSM or a
+  verified row). Unknown stays "unknown". Nothing is ever sent to a hospital.
 
-## Latency budget (target, live mode)
-| Step | Typical | How it is kept down |
-|---|---|---|
-| Fixed prompts (menus, read-back frame, emergency) | ~0 ms | Pre-rendered audio (`scripts/prerender_prompts.py`) |
-| STT | 0.5–1.5 s | Short utterances, 16 kHz, Sarvam REST |
-| Translate ×2 | 0.2–0.5 s each | Cached |
-| Triage + retrieval | <5 ms | Pure Python |
-| LLM | 0.3–1 s | Groq LPU, max 220 tokens, ≤4 sentences |
-| TTS | 1–3 s | GPU Parler / Sarvam Bulbul |
-
-Each turn returns `timings_ms`, shown as a waterfall in the UI.
-
-## State machine (backend/app/sessions.py)
-
-```
-INCOMING_CALL → LANGUAGE_SELECTION → READY_TO_LISTEN → CONFIRMING ─┬─► ANSWERED ──┐
-                       ▲                     ▲          (read-back) └─► EMERGENCY ─┤
-                       └──── press 3 ────────┴──────── press 1 ◄──────────────────┘
-                                                                  press 9 → CONSENT → CALL_ENDED
-```
-Invalid transitions raise and return HTTP 409. Location search does not change state:
-it can run from ANSWERED or EMERGENCY (keypad 4) and never delays the emergency script.
-
-## Healthcare navigation (backend/app/facilities.py)
-- `data/facilities.csv`: public medical colleges and district hospitals in all eight NE states,
-  plus a denser Guwahati list. Loaded into SQLite at start-up. Every row says "not yet verified"
-  and has no phone number until someone has phoned it and filled in `verified_on`.
-- `data/places.csv`: towns, Guwahati localities, Assamese/Hindi spellings and PIN codes, so
-  "Jalukbari", "781014" or "মালিগাঁও" all resolve without any network.
-- Optional free OpenStreetMap lookups (Nominatim, Overpass), always labelled as community data.
-- Nothing is ever sent to a hospital. The response always says so.
-
-## Medicine safety (backend/app/medicine.py)
-- Prescription requests ("which medicine", "what dose", "how many tablets") pull the
-  medicine-safety card to the front and add an explicit refusal rule to the prompt.
-- Any generated answer stating an amount, strength or frequency is discarded and replaced by
-  vetted card text. The call log shows when this happened.
+## Facilities (facilities.py)
+- OpenStreetMap via Overpass, searched at 10, 30 and then 80 km. Hospitals come first in an emergency.
+- Cached in SQLite (`DB_PATH`) for 7 days. `scripts/import_osm_facilities.py` pre-loads an area.
+- `data/verified_facilities.csv`: rows checked by phone, used only with a `verified_on` date.
+- Place text goes to Nominatim (max 1 request/s, cached). When OpenStreetMap is off, a built-in
+  approximate list of NE towns, Guwahati localities and PIN codes is used, and labelled as such.
 
 ## Privacy
-- Sessions, transcripts and audio live in memory only and are wiped when the call ends.
-- The care slip exists only with explicit consent (keypad 1), expires after 24 h, and can be deleted.
-- Logs contain session ids and states, never health text or provider error bodies.
-- A caller's location is kept only for the current call and wiped at hang-up.
+Conversations, history and audio live in memory and expire after inactivity. Location is
+sent only when the user taps a button, is used for one search, and is not stored. Logs hold
+ids and error kinds, never health text.
 
-## Extending to a new language
-Add a `Language(...)` entry in `backend/app/languages.py` with the providers that
-really support it. The capability table, keypad menu and fallbacks update automatically.
+## Tests
+`backend/tests/` uses **mocked HTTP** for every provider (no keys, no network).
+`backend/tests/mock_providers.py` is a mock server for browser end-to-end runs.
+Real-provider checks: `scripts/verify_live.py` (needs keys and internet).

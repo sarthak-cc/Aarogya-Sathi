@@ -1,138 +1,110 @@
 """Language capability registry.
 
-`provider_support` records what the upstream providers *claim* to support
-(checked against their public docs in Oct 2026). `configured_capabilities()`
-combines that with which API keys are actually set, so the UI and IVR never
-promise a voice conversation that cannot happen.
+`stt` / `translate` / `tts` record what providers document as supported
+(checked October 2026). `capability()` combines that with what is configured
+on this server and with the results of `scripts/verify_live.py`, so the
+language picker only offers what can really work, and says what is verified.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import json
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from . import config
 
+VERIFICATION_FILE = Path(__file__).resolve().parent / "data" / "verification.json"
+
 
 @dataclass(frozen=True)
 class Language:
-    code: str  # BCP-47 code used across the app
+    code: str
     name: str
     native_name: str
+    script: str
     states: tuple[str, ...]
-    keypad: Optional[str]  # digit on the IVR language menu; None = sub-menu only
-    stt: tuple[str, ...] = ()  # providers able to transcribe
-    translate: tuple[str, ...] = ()  # providers able to translate to/from English
-    tts: tuple[str, ...] = ()  # providers able to speak it
-    browser_voice: Optional[str] = None  # Web Speech lang tag likely to exist
+    stt: tuple[str, ...] = ()
+    translate: tuple[str, ...] = ()
+    tts: tuple[str, ...] = ()
+    example: str = ""
     notes: str = ""
-    tested_end_to_end: bool = False  # flip only after a native speaker verifies a full call
 
 
-REGISTRY: dict[str, Language] = {
-    lang.code: lang
-    for lang in [
-        Language(
-            "as-IN", "Assamese", "অসমীয়া", ("Assam",), "1",
-            stt=("sarvam",), translate=("sarvam",), tts=("parler",),
-            notes="Sarvam Saaras v4 STT + Sarvam Translate; voice via self-hosted Indic Parler-TTS.",
-        ),
-        Language(
-            "brx-IN", "Bodo", "बड़ो", ("Assam",), "2",
-            stt=("sarvam",), translate=("sarvam",), tts=("parler",),
-            notes="Devanagari script. Same stack as Assamese.",
-        ),
-        Language(
-            "mni-IN", "Manipuri (Meitei)", "মৈতৈলোন্", ("Manipur",), "3",
-            stt=("sarvam",), translate=("sarvam",), tts=("parler",),
-            notes="Output script (Bengali vs Meitei Mayek) must be checked with native users.",
-        ),
-        Language(
-            "ne-IN", "Nepali", "नेपाली", ("Sikkim", "Assam", "Meghalaya"), "4",
-            stt=("sarvam", "groq"), translate=("sarvam",), tts=("parler",),
-            browser_voice="ne-NP",
-        ),
-        Language(
-            "bn-IN", "Bengali", "বাংলা", ("Tripura", "Assam (Barak Valley)"), "5",
-            stt=("sarvam", "groq"), translate=("sarvam",), tts=("sarvam",),
-            browser_voice="bn-IN",
-        ),
-        Language(
-            "hi-IN", "Hindi", "हिन्दी", ("All NER states",), "6",
-            stt=("sarvam", "groq"), translate=("sarvam",), tts=("sarvam",),
-            browser_voice="hi-IN",
-        ),
-        Language(
-            "en-IN", "English", "English", ("All NER states",), "7",
-            stt=("sarvam", "groq"), translate=("identity",), tts=("sarvam",),
-            browser_voice="en-IN",
-        ),
-        # Languages the NER needs but no public speech model covers reliably yet.
-        Language("kha-IN", "Khasi", "Ka Ktien Khasi", ("Meghalaya",), None,
-                 notes="No reliable public STT/TTS found. Requests are logged to prioritise data collection."),
-        Language("grt-IN", "Garo", "A·chik", ("Meghalaya",), None,
-                 notes="No reliable public STT/TTS found."),
-        Language("lus-IN", "Mizo", "Mizo ṭawng", ("Mizoram",), None,
-                 notes="No reliable public STT/TTS found."),
-        Language("trp-IN", "Kokborok", "Kók Borok", ("Tripura",), None,
-                 notes="No reliable public STT/TTS found."),
-        Language("nag-IN", "Nagamese", "Nagamese", ("Nagaland",), None,
-                 notes="Creole without public speech models; Hindi/English often understood."),
-    ]
-}
-
-# Keypad 8 on the language menu = "my language is not listed"
-OTHER_LANGUAGES_DIGIT = "8"
+REGISTRY: dict[str, Language] = {lang.code: lang for lang in [
+    Language("hi-IN", "Hindi", "हिन्दी", "Devanagari", ("All NE states",), ("sarvam", "groq"), ("sarvam",), ("sarvam",),
+             "मुझे दो दिन से बुखार है, क्या करूँ?"),
+    Language("as-IN", "Assamese", "অসমীয়া", "Assamese (Bengali-Assamese)", ("Assam",), ("sarvam",), ("sarvam",), ("mms", "parler"),
+             "মোৰ দুদিন ধৰি জ্বৰ হৈছে, কি কৰিম?",
+             "Sarvam has no Assamese voice. Spoken answers need the optional local MMS voice or a Parler server."),
+    Language("en-IN", "English", "English", "Latin", ("All NE states",), ("sarvam", "groq"), ("identity",), ("sarvam",),
+             "I have had a fever for two days. What should I do?"),
+    Language("bn-IN", "Bengali", "বাংলা", "Bengali", ("Tripura", "Barak Valley"), ("sarvam", "groq"), ("sarvam",), ("sarvam",),
+             "আমার দুদিন ধরে জ্বর, কী করব?"),
+    Language("ne-IN", "Nepali", "नेपाली", "Devanagari", ("Sikkim", "Assam", "Meghalaya"), ("sarvam", "groq"), ("sarvam",),
+             ("mms", "parler"), "मलाई दुई दिनदेखि ज्वरो छ, के गर्ने?",
+             "Sarvam has no Nepali voice. Spoken answers need the optional local MMS voice or a Parler server."),
+    Language("brx-IN", "Bodo", "बड़ो", "Devanagari", ("Assam",), ("sarvam",), ("sarvam",), ("parler",), "",
+             "Spoken answers need a self-hosted Parler server. Translation quality not yet reviewed by native speakers."),
+    Language("mni-IN", "Manipuri (Meitei)", "মৈতৈলোন্", "Bengali script (Meitei Mayek not verified)", ("Manipur",),
+             ("sarvam",), ("sarvam",), ("parler",), "",
+             "Output script (Bengali script vs Meitei Mayek) is not verified. Spoken answers need a Parler server."),
+    # Needed in the North East, but no reliable public speech or translation service exists yet.
+    Language("kha-IN", "Khasi", "Ka Ktien Khasi", "Latin", ("Meghalaya",),
+             notes="No reliable speech recognition, translation or voice service found."),
+    Language("grt-IN", "Garo", "A·chik", "Latin", ("Meghalaya",),
+             notes="No reliable speech recognition, translation or voice service found."),
+    Language("lus-IN", "Mizo", "Mizo ṭawng", "Latin", ("Mizoram",),
+             notes="No reliable speech recognition, translation or voice service found."),
+    Language("trp-IN", "Kokborok", "Kók Borok", "Latin / Bengali", ("Tripura",),
+             notes="No reliable speech recognition, translation or voice service found."),
+    Language("nag-IN", "Nagamese", "Nagamese", "Latin", ("Nagaland",),
+             notes="No public speech or translation models. Many speakers also use Hindi or Assamese."),
+]}
 
 
 def get(code: str) -> Optional[Language]:
     return REGISTRY.get(code)
 
 
-def by_keypad(digit: str) -> Optional[Language]:
-    for lang in REGISTRY.values():
-        if lang.keypad == digit:
-            return lang
-    return None
+def verification() -> dict:
+    try:
+        return json.loads(VERIFICATION_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
 
 
-def configured_capabilities(lang: Language) -> dict:
+def capability(lang: Language) -> dict:
+    from .providers import tts  # local import avoids a cycle
+
     s = config.settings
     stt_live = ("sarvam" in lang.stt and s.has_sarvam) or ("groq" in lang.stt and s.has_groq_stt)
     translate_live = "identity" in lang.translate or ("sarvam" in lang.translate and s.has_sarvam)
-    tts_live = ("sarvam" in lang.tts and s.has_sarvam) or ("parler" in lang.tts and s.has_parler)
+    voices = tts.available(lang.code)
+    can_answer = s.has_llm and translate_live
 
-    if not lang.stt:
-        level = "unsupported"
-    elif stt_live and translate_live and tts_live and s.has_llm:
-        level = "full_voice"
-    elif lang.stt and lang.translate and lang.tts:
-        level = "voice_ready_needs_keys"
+    if not lang.stt and not lang.translate:
+        status, summary = "unavailable", "Not available yet"
+    elif not can_answer:
+        status = "not_configured"
+        summary = "Needs the AI key" if not s.has_llm else "Needs the Sarvam key"
+    elif stt_live and voices:
+        status, summary = "voice", "Speak and listen"
+    elif stt_live:
+        status, summary = "voice_in_text_out", "Speak; answer shown as text"
     else:
-        level = "partial"
+        status, summary = "text", "Type; answer shown as text"
 
+    checked = verification().get(lang.code, {})
     return {
-        "code": lang.code,
-        "name": lang.name,
-        "native_name": lang.native_name,
-        "states": list(lang.states),
-        "keypad": lang.keypad,
-        "provider_support": {
-            "stt": list(lang.stt),
-            "translate": list(lang.translate),
-            "tts": list(lang.tts),
-        },
-        "configured": {
-            "stt": stt_live,
-            "translate": translate_live,
-            "tts": tts_live,
-            "llm": s.has_llm,
-        },
-        "level": level,
-        "browser_voice": lang.browser_voice,
-        "tested_end_to_end": lang.tested_end_to_end,
-        "notes": lang.notes,
+        "code": lang.code, "name": lang.name, "native_name": lang.native_name, "script": lang.script,
+        "states": list(lang.states), "example": lang.example, "notes": lang.notes,
+        "status": status, "summary": summary, "selectable": status not in ("unavailable", "not_configured"),
+        "speech_input": stt_live, "speech_output": voices, "translation": translate_live,
+        "verified": {"passed": bool(checked.get("passed")), "date": checked.get("date"),
+                     "checks": checked.get("checks", {})},
     }
 
 
 def all_capabilities() -> list[dict]:
-    return [configured_capabilities(lang) for lang in REGISTRY.values()]
+    return [capability(lang) for lang in REGISTRY.values()]

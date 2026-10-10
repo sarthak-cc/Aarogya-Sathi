@@ -6,8 +6,8 @@ someone or state a dose. Two deterministic checks enforce that around the LLM:
 
 * `is_prescription_request` spots "which medicine / how much should I take"
   questions so the answer is steered to the medicine-safety card and a referral.
-* `contains_dose` rejects any generated answer that states an amount, frequency
-  or strength; the vetted card text is used instead.
+* `strip_doses` removes any generated sentence that states an amount, frequency
+  or strength, and adds a pointer to a doctor or pharmacist instead.
 """
 from __future__ import annotations
 
@@ -42,3 +42,16 @@ def is_prescription_request(*texts: str) -> bool:
 
 def contains_dose(text: str) -> bool:
     return bool(text and _DOSE.search(text))
+
+
+_SENTENCE = re.compile(r"(?<=[.!?।])\s+")
+DOSE_NOTE = "Ask a doctor or pharmacist how much to take."
+
+
+def strip_doses(text: str) -> tuple[str, bool]:
+    """Drop sentences that state a dose. Returns (text, removed_anything)."""
+    sentences = _SENTENCE.split(text.strip())
+    kept = [s for s in sentences if not contains_dose(s)]
+    if len(kept) == len(sentences):
+        return text, False
+    return " ".join(kept + [DOSE_NOTE]).strip(), True

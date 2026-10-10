@@ -1,0 +1,6 @@
+# Optional: local Assamese/Nepali voice with Meta MMS-TTS (CPU, ~150 MB per language, CC-BY-NC 4.0).
+transformers>=4.40
+torch>=2.2
+soundfile>=0.12
+numpy>=1.26
+uroman>=1.3

@@ -1,10 +1,10 @@
-"""Curated health-information cards used to ground every LLM answer.
+"""Reference notes passed to the LLM as extra context.
 
-The LLM is told to answer ONLY from the retrieved cards. Content is general
-public-health guidance written in plain language, aligned with widely
-published WHO / Government of India messaging. No drug doses are included on
-purpose. Every card must be reviewed by a qualified health professional before
-any real deployment.
+The LLM answers any health question; when a question matches one of these
+notes (North East specific topics such as malaria, JE, scrub typhus, snakebite),
+the note is added to the prompt so the answer reflects local public-health
+guidance. Content follows widely published WHO / Government of India messaging,
+contains no drug doses, and must be reviewed by a health professional.
 """
 from __future__ import annotations
 
@@ -235,23 +235,11 @@ def retrieve(english_text: str, k: int = 2) -> list[Card]:
 
 def render_for_prompt(cards: list[Card]) -> str:
     if not cards:
-        return "NO MATCHING CARD. You do not have vetted information for this question."
+        return "(No specific notes for this question.)"
     parts = []
     for c in cards:
         parts.append(
-            f"[CARD {c.id}] {c.title}\nFacts:\n- " + "\n- ".join(c.facts)
+            f"[NOTE {c.id}] {c.title}\nFacts:\n- " + "\n- ".join(c.facts)
             + "\nSeek care when:\n- " + "\n- ".join(c.seek_care) + f"\nSource: {c.source}"
         )
     return "\n\n".join(parts)
-
-
-def card_answer(cards: list[Card], simpler: bool = False) -> str:
-    """Deterministic answer built from cards (demo mode / LLM outage)."""
-    if not cards:
-        return ("I do not have reliable information on that. Please speak to your ASHA worker or visit the "
-                "nearest health centre. If it feels serious, call 112.")
-    c = cards[0]
-    n = 2 if simpler else 3
-    facts = " ".join(c.facts[:n])
-    care = c.seek_care[0]
-    return f"{facts} See a health worker or doctor if: {care[0].lower() + care[1:]}"

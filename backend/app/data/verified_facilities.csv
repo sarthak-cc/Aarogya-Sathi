@@ -1,0 +1,5 @@
+# Facilities your team has checked by phone. Leave empty rather than guess.
+# A row is used ONLY if it has name, lat, lon and verified_on (YYYY-MM-DD).
+# emergency: yes | no | unknown (what the facility confirmed on the phone)
+# kind: hospital | health_centre | clinic
+name,kind,address,lat,lon,phone,emergency,services,verified_on

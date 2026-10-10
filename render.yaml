@@ -14,7 +14,9 @@ services:
       - key: SARVAM_API_KEY
         sync: false
       - key: LLM_MODEL
-        value: llama-3.3-70b-versatile
+        value: openai/gpt-oss-120b
+      - key: LLM_REASONING_EFFORT
+        value: low
       - key: OSM_ENABLED
         value: "true"
       - key: OSM_CONTACT

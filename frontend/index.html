@@ -4,141 +4,90 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Aarogya Saathi</title>
-  <meta name="description" content="Voice health-information line for North East India that works on any phone.">
+  <meta name="description" content="Ask health questions by voice in your language. Emergency guidance and nearby hospitals for North East India.">
   <meta name="theme-color" content="#2E3A48">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Saathi">
   <link rel="manifest" href="/static/manifest.webmanifest">
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Bengali:wght@500;600&family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <p class="brand-name">Aarogya Saathi <span class="brand-tag">Your health. Your language. Any phone.</span></p>
-    <div class="mode" id="mode" aria-live="polite">Checking services…</div>
+  <header class="top">
+    <div>
+      <p class="brand">Aarogya Saathi</p>
+      <p class="tagline">Your health. Your language. Your companion.</p>
+    </div>
+    <span class="status" id="status" aria-live="polite">Checking…</span>
   </header>
 
-  <main class="layout">
-    <section class="phone-col" aria-label="Phone simulator">
-      <div class="phone-wrap" id="phoneWrap">
-        <div class="phone" id="phone">
-          <div class="earpiece" aria-hidden="true"></div>
-          <p class="bezel-brand" aria-hidden="true">SAATHI</p>
+  <div class="banner" id="offline" hidden>You are offline. Answers and voice need an internet connection.</div>
+  <div class="banner" id="configBanner" hidden></div>
 
-          <div class="bezel">
-            <div class="lcd" id="lcd" data-backlight="on" data-mode="" aria-live="polite" aria-atomic="true">
-              <div class="lcd-status">
-                <span class="ico" id="icoSignal" aria-hidden="true"></span>
-                <span class="lcd-lang" id="lcdLang"></span>
-                <span class="lcd-rec" id="lcdRec" hidden>●REC</span>
-                <span class="ico" id="icoBattery" aria-hidden="true"></span>
-              </div>
-              <div class="lcd-body" id="lcdBody"></div>
-              <span class="lcd-arrow up" id="arrowUp" aria-hidden="true" hidden>▲</span>
-              <span class="lcd-arrow down" id="arrowDown" aria-hidden="true" hidden>▼</span>
-              <div class="lcd-soft" aria-hidden="true"><span id="softLLabel"></span><span id="softRLabel"></span></div>
-            </div>
-          </div>
-
-          <div class="navrow">
-            <button class="key soft" id="softL" aria-label="Left softkey"><span class="soft-mark" aria-hidden="true">⌐</span></button>
-            <div class="nav" role="group" aria-label="Navigation key">
-              <button class="nav-up" id="navUp" aria-label="Scroll up">▲</button>
-              <span class="nav-diamond" aria-hidden="true">◆</span>
-              <button class="nav-down" id="navDown" aria-label="Scroll down">▼</button>
-            </div>
-            <button class="key soft" id="softR" aria-label="Right softkey"><span class="soft-mark" aria-hidden="true">C</span></button>
-          </div>
-
-          <div class="callrow">
-            <button class="key call" id="callBtn" aria-label="Call">CALL</button>
-            <button class="key end" id="endBtn" aria-label="End call">END</button>
-          </div>
-
-          <div class="keypad" id="keypad">
-            <button class="key" data-d="1" aria-label="Key 1, ask again">1<small>&nbsp;</small></button>
-            <button class="key" data-d="2" aria-label="Key 2, repeat">2<small>abc</small></button>
-            <button class="key" data-d="3" aria-label="Key 3, change language">3<small>def</small></button>
-            <button class="key" data-d="4" aria-label="Key 4, find a hospital">4<small>ghi</small></button>
-            <button class="key" data-d="5" aria-label="Key 5, simpler words">5<small>jkl</small></button>
-            <button class="key" data-d="6" aria-label="Key 6">6<small>mno</small></button>
-            <button class="key" data-d="7" aria-label="Key 7">7<small>pqrs</small></button>
-            <button class="key" data-d="8" aria-label="Key 8, language not listed">8<small>tuv</small></button>
-            <button class="key" data-d="9" aria-label="Key 9, end call">9<small>wxyz</small></button>
-            <button class="key" data-d="*" aria-label="Key star">*<small>&nbsp;</small></button>
-            <button class="key" data-d="0" aria-label="Key 0, menu">0<small>&nbsp;</small></button>
-            <button class="key" data-d="#" aria-label="Key hash">#<small>&nbsp;</small></button>
-          </div>
-
-          <div class="mic-holes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-        </div>
-      </div>
-
-      <form class="typebox" id="typeForm" autocomplete="off">
-        <label for="typeInput" id="typeLabel">Type instead</label>
-        <div class="typerow">
-          <input id="typeInput" placeholder="e.g. My child has had a cough for two days." disabled>
-          <button type="submit" id="typeSend" disabled>Ask</button>
-        </div>
-      </form>
-
-      <div class="scenarios" id="scenarios" hidden>
-        <p id="scenarioLabel">Demo questions</p>
-        <div class="chips" id="scenarioChips"></div>
-      </div>
-
-      <label class="toggle"><input type="checkbox" id="muteToggle"> Mute tones and voice</label>
-      <p class="kbd-note">Keyboard: 0–9 * #, Enter = Call, Esc = End, hold Space = Speak, arrows = scroll. After an answer, 4 finds a hospital near you.</p>
+  <main class="app">
+    <!-- Step 1: language -->
+    <section id="langStep" aria-labelledby="langTitle">
+      <h1 id="langTitle">Choose your language</h1>
+      <div class="lang-grid" id="langGrid"></div>
+      <details class="unavailable" id="unavailableBox">
+        <summary>Languages not available yet</summary>
+        <ul id="unavailableList"></ul>
+      </details>
     </section>
 
-    <section class="panel" aria-label="What the system did">
-      <nav class="tabs" role="tablist">
-        <button role="tab" aria-selected="true" data-tab="convo">Call log</button>
-        <button role="tab" aria-selected="false" data-tab="slip">Care slip</button>
-        <button role="tab" aria-selected="false" data-tab="langs">Network</button>
-      </nav>
-
-      <div class="tab" id="tab-convo">
-        <div class="empty" id="convoEmpty">
-          <h2>Each answer shows its working</h2>
-          <p>Start a call and ask something. You will see what was heard, the English the AI reasoned in, whether the safety check raised a red flag, which vetted health card the answer came from, and how long each step took.</p>
-        </div>
-        <ol class="turns" id="turns"></ol>
+    <!-- Step 2: talk -->
+    <section id="talkStep" hidden aria-label="Talk to Aarogya Saathi">
+      <div class="bar">
+        <button type="button" class="chip" id="changeLang"></button>
+        <label class="mute"><input type="checkbox" id="mute"> <span data-t="mute">Mute voice</span></label>
       </div>
 
-      <div class="tab" id="tab-slip" hidden>
-        <div class="empty" id="slipEmpty">
-          <h2>Something to show the health worker</h2>
-          <p>When a caller ends with 9 and agrees, they get a short slip with a code. An ASHA worker or doctor can open it here for 24 hours. Nothing is kept without that consent.</p>
-        </div>
-        <article class="slip" id="slip" hidden></article>
-        <form class="lookup" id="lookupForm">
-          <label for="lookupInput">Open a slip by code</label>
-          <div class="typerow"><input id="lookupInput" maxlength="6" placeholder="6-character code"><button type="submit">Open slip</button></div>
-          <p class="lookup-msg" id="lookupMsg" aria-live="polite"></p>
+      <button type="button" class="emergency-btn" id="emergencyBtn">
+        <span class="em-icon" aria-hidden="true">!</span><span data-t="emergency">Emergency help</span>
+      </button>
+
+      <ol class="turns" id="turns" aria-live="polite"></ol>
+
+      <div class="speak-area">
+        <button type="button" class="mic" id="mic" aria-describedby="micLabel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg>
+          <span class="meter" id="meter" aria-hidden="true"></span>
+        </button>
+        <p class="mic-label" id="micLabel" data-t="tap">Tap to speak</p>
+        <p class="mic-help" id="micHelp"></p>
+      </div>
+
+      <form class="type-row" id="typeForm" autocomplete="off">
+        <label class="sr-only" for="typeInput" data-t="type">Or type your question</label>
+        <input id="typeInput" data-tp="type" placeholder="Or type your question">
+        <button type="submit" data-t="send">Send</button>
+      </form>
+      <button type="button" class="link-btn" id="findBtn" data-t="nearby">Find a nearby hospital</button>
+    </section>
+
+    <!-- Nearby facilities -->
+    <section class="facility-panel" id="facilityPanel" hidden aria-labelledby="facTitle">
+      <div class="fp-head">
+        <h2 id="facTitle" data-t="nearby">Find a nearby hospital</h2>
+        <button type="button" class="close" id="facClose" aria-label="Close">×</button>
+      </div>
+      <p class="why" data-t="why">Your location is used only to find nearby health facilities. It is not stored.</p>
+      <div class="fp-actions">
+        <button type="button" class="primary" id="gpsBtn" data-t="useLocation">Use my location</button>
+        <form class="type-row" id="placeForm" autocomplete="off">
+          <label class="sr-only" for="placeInput" data-t="place">Village, town, PIN code or landmark</label>
+          <input id="placeInput" data-tp="place" placeholder="Village, town, PIN code or landmark">
+          <button type="submit" data-t="search">Search</button>
         </form>
       </div>
-
-      <div class="tab" id="tab-langs" hidden>
-        <h2 class="sub">Channels</h2>
-        <ul class="channels" id="channelRows"></ul>
-        <h2 class="sub">Language coverage</h2>
-        <p class="lead">Network coverage: what each language can do on this line right now. Honest gaps are listed so nobody is promised a voice conversation that cannot happen.</p>
-        <table class="langs">
-          <thead><tr><th>Language</th><th>Key</th><th>Signal</th><th>Hear</th><th>Speak</th></tr></thead>
-          <tbody id="langRows"></tbody>
-        </table>
-      </div>
-
-      <footer class="disclaimer" id="disclaimer">Aarogya Saathi provides general health information and does not replace a qualified healthcare professional. If you think you are experiencing a medical emergency, seek emergency help immediately.</footer>
+      <div id="facResults" aria-live="polite"></div>
     </section>
   </main>
 
+  <footer class="foot">Aarogya Saathi gives general health information. It does not diagnose, prescribe, or replace a doctor or health worker. In an emergency call 112.</footer>
+  <audio id="player" preload="none"></audio>
   <script src="/static/app.js"></script>
 </body>
 </html>

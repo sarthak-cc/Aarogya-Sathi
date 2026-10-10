@@ -1,132 +1,125 @@
 # Aarogya Saathi
 
-**A voice health companion for rural North East India: answers in your language, and points you to real care when it matters.**
-Built for CodeWar 8.0, problem statement 2: Multilingual AI Health Companion for Rural and Remote NER.
+**Your health. Your language. Your companion.**
+A voice-first, multilingual AI health-information companion for rural and remote North East India.
 
-Open the website on any phone or laptop, press **CALL**, pick a language and speak. Aarogya Saathi
-answers everyday health questions in simple words. If the caller describes a possible emergency,
-such as chest pain, a snakebite or a pregnancy danger sign, it switches immediately: emergency
-guidance first, then it asks where they are and lists the nearest suitable hospitals with 108/112.
-It gives general information only. It never diagnoses, never prescribes, and never claims to have
-called anyone.
+You pick a language, tap one big button and ask a health question out loud (or type it).
+Aarogya Saathi transcribes it with a real speech service, checks for emergency danger signs
+**before** any AI is involved, answers routine questions with a real LLM in simple words,
+translates the answer back and speaks it. For a possible emergency it gives instant fixed guidance
+(call 112, plus one first-aid line) and helps find nearby hospitals from OpenStreetMap.
+It gives general information only. It never diagnoses, never prescribes, never gives doses,
+and never claims to have contacted anyone.
 
-## Three core features
+## What is real, and what has been verified
 
-| Feature | How it works | Why judges should care |
+| Part | Implementation | Status |
 |---|---|---|
-| **1. Multilingual health companion** | Voice in, voice out. Read-back confirmation ("I heard: fever since yesterday. Press 1 if right"). Answers grounded on 14 vetted health cards. Press 5 for simpler words. | Wrong speech recognition never turns into confident advice. Different literacy levels are handled. |
-| **2. Emergency detection and assistance** | A rule-based safety engine runs **before** any AI, in English, Hindi, Assamese and Bengali. Emergencies skip the AI, speak a fixed 112 script and a first-aid line, then ask for the location (GPS, spoken or typed place, or a PIN typed on the keypad). | Guidance never waits for a database query or an LLM. |
-| **3. Healthcare navigation and medicine safety** | Facility search over a seeded hospital database (all eight NE states, dense around Guwahati) plus free OpenStreetMap. Prescription requests are refused safely, and any AI answer that states a dose is blocked. | Clear referrals to a clinician instead of pretending to be one. |
+| Answers | Groq API, `openai/gpt-oss-120b` (configurable), with conversation history | Real API integration. Tested with mocked HTTP. **Verify live** with `scripts/verify_live.py` |
+| Speech to text | Sarvam Saaras v3 (`mode=transcribe`), Groq Whisper as a second option | Real integration. Browser → WAV → backend path tested end to end against a mock server |
+| Translation | Sarvam Translate (`sarvam-translate:v1`), English as the pivot | Real integration |
+| Voice | Sarvam Bulbul v3 (hi, bn, en). Optional local MMS-TTS or Parler for Assamese/Nepali | Real integration. Assamese voice needs the optional extra |
+| Emergency safety | Deterministic multilingual rules before the LLM, plus the LLM's own triage tag as a second net | Tested (en, hi, as, bn), including with the AI and translation down |
+| Nearby facilities | OpenStreetMap (Overpass + Nominatim), SQLite cache, optional team-verified CSV | Real integration. Tested with mocked HTTP |
 
-## Honest scope
+This code was built in a container that could not reach Groq, Sarvam or OpenStreetMap. Every
+provider call is therefore tested against mocks, not live. **Nothing is marked "verified" until you run
+`scripts/verify_live.py` with real keys.** It writes `docs/VERIFICATION.md` and the "Verified live" badges
+in the language picker.
 
-| Channel | Status |
-|---|---|
-| Web voice (browser microphone over HTTPS, phone or laptop) | **Live** |
-| Keypad phone line (IVR) | **Planned.** Needs a paid telephony provider such as Twilio or Exotel, plus an Indian number with KYC. That isn't free, so it is out of the hackathon build. The pipeline is channel-agnostic, so a phone adapter plugs into the same backend later. |
-| Automatically notifying a hospital or ambulance | **Not built.** Needs an authorised integration with confirmation. Today the caller gets contact details and is told nobody has been contacted. |
+### Languages
 
-The Network tab in the app shows the same table, plus which languages really have voice support right now.
+| Language | Speak | Answer | Hear the answer |
+|---|---|---|---|
+| Hindi | Sarvam | LLM via translation | Sarvam Bulbul: **first end-to-end target** |
+| English | Sarvam / Whisper | LLM | Sarvam Bulbul |
+| Bengali | Sarvam / Whisper | LLM via translation | Sarvam Bulbul |
+| Assamese | Sarvam | LLM via translation | Not in Bulbul. Text only, unless MMS-TTS or Parler is set up |
+| Nepali | Sarvam / Whisper | LLM via translation | Same as Assamese |
+| Bodo | Sarvam | LLM via translation | Parler server only |
+| Manipuri (Meitei) | Sarvam | LLM via translation (**script, Bengali vs Meitei Mayek, not verified**) | Parler server only |
+| Khasi, Garo, Mizo, Kokborok, Nagamese | – | – | – **Not offered.** No reliable public speech or translation service. The app lists them as unavailable, with the reason |
 
-## Quick start (local)
+Native speakers still need to review answer quality in every language. Machine checks can't judge it.
+
+## Run it locally
 
 ```bash
-cd Aarogya-Sathi
 python -m venv .venv
-source .venv/bin/activate          # Windows: .\.venv\Scripts\Activate.ps1
+source .venv/bin/activate              # Windows: .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-cp .env.example .env               # add GROQ + SARVAM keys for live AI (optional)
+cp .env.example .env                   # then put your keys in .env
 cd backend
 uvicorn app.main:app --reload
 ```
 
-Open http://localhost:8000 and press **CALL**. API docs are at http://localhost:8000/docs.
-Run the tests from `backend/` with `python -m pytest -q` (63 tests).
-Without keys, everything runs in labelled demo mode, including emergencies, facility search and the care slip.
+Open http://localhost:8000. The microphone and location also work on `localhost`. Anywhere else they need HTTPS.
 
-## Deploy for free (judges open a link on their phones)
+Keys (all have free starting tiers; check the current limits):
+- `LLM_API_KEY`: Groq, https://console.groq.com/keys. Required for answers.
+- `SARVAM_API_KEY`: https://dashboard.sarvam.ai. Required for any language other than English, and for voice.
 
-The microphone and GPS only work over **HTTPS**, and every host below gives you HTTPS automatically.
+Without keys the app still loads. It shows exactly which key is missing and offers no language it can't serve.
 
-**Render (recommended):** push this repo to GitHub, then on render.com choose *New → Blueprint* and pick
-the repo. `render.yaml` creates a free Docker web service. Add `LLM_API_KEY`, `GROQ_API_KEY` and
-`SARVAM_API_KEY` as secret environment variables in the Render dashboard. Free instances sleep
-after about 15 minutes idle, so open the link a minute before judging.
-
-**Hugging Face Spaces / Koyeb / Railway:** create a Docker app from this repo. The `Dockerfile` reads
-`$PORT` (use 7860 on Hugging Face). Add the same secrets.
-
-Never commit `.env`. It is already in `.gitignore` and `.dockerignore`.
-
-## Demo script for judges (about 3 minutes, from Assam Engineering College)
-
-1. On a phone, open the link, press **CALL**, then **1** for Assamese.
-2. Tap **Fever since yesterday**: grounded answer, its card source, and a latency waterfall in the Call log. Press **5** for simpler words.
-3. Tap **Heart attack signs (emergency)**: the screen flashes amber, the AI is skipped, and the 112 script plus "make the person sit and rest" plays straight away.
-4. Press **Hospital** (right softkey) then **GPS**, or tap the demo location **Assam Engineering College, Jalukbari**. The nearest listed hospitals appear with distances, 108/112, map links and "not yet verified" labels. Key **1** opens the first one.
-5. Press **4** again and type **786001** on the keypad: that's how a caller without GPS works (Dibrugarh, Assam Medical College).
-6. Tap **Asks for a medicine dose**: a safe refusal plus general precautions. With live AI, a draft that names a dose is blocked, and the Call log says so.
-7. Press **9**, then **1**. The **Care slip** tab shows what the ASHA worker sees.
-8. Open **Network**: web voice is live, the phone line is planned (paid provider), hospital alerts aren't built. Then the honest language gaps for Khasi, Garo, Mizo and Kokborok.
-
-## Modes
-
-| Mode | What you need | What works |
-|---|---|---|
-| **Demo** (default) | Nothing | Full flow. Six scripted scenarios in English, Hindi and Assamese, labelled "Demo answer". Safety check, facility search, slip and simpler words all work. |
-| **Live AI** | `LLM_API_KEY` (Groq, free tier) + `SARVAM_API_KEY` | Any question in Assamese, Bodo, Manipuri, Nepali, Bengali, Hindi or English, answered from vetted cards. Hindi, Bengali and English voice. |
-| **Live voice for NER languages** | `PARLER_TTS_URL` | Assamese, Bodo, Manipuri and Nepali spoken answers via self-hosted Indic Parler-TTS (see below). |
-| **Live map data** | Network access (`OSM_ENABLED=true`, default) | OpenStreetMap hospitals near the caller, shown alongside the seed list. |
-
-### Running Parler-TTS on a free GPU
-In a Kaggle or Colab notebook with a T4 GPU:
+### Check the real providers
 ```bash
-pip install git+https://github.com/huggingface/parler-tts.git fastapi uvicorn soundfile pyngrok
-python tts_server/parler_server.py   # then: ngrok http 8001
+cd backend
+python ../scripts/verify_live.py                 # Hindi, English, Assamese
+python ../scripts/verify_live.py bn-IN ne-IN     # others
 ```
-Put the ngrok https URL in `PARLER_TTS_URL`. Then pre-render the fixed prompts so menus play instantly:
-`cd backend && python ../scripts/prerender_prompts.py`.
+For each language it runs a question that isn't in any dataset through the real pipeline. It also checks
+an emergency phrase, a real voice → real speech-recognition round trip, and a real OpenStreetMap
+search near Jalukbari, Guwahati.
 
-## Before showing real users: verify the hospital list
+### Optional: Assamese / Nepali voice
+```bash
+pip install -r requirements-tts.txt     # Meta MMS-TTS on CPU, CC-BY-NC 4.0 (non-commercial)
+# .env:  MMS_TTS_LANGS=as-IN,ne-IN
+```
+Or run `tts_server/parler_server.py` on a free Kaggle/Colab GPU and set `PARLER_TTS_URL`.
 
-`backend/app/data/facilities.csv` lists public medical colleges and district hospitals in every NE state,
-plus a denser Guwahati set (Jalukbari, Maligaon, Boragaon, Dispur and around). Coordinates are approximate
-and **no phone numbers are filled in**, because a wrong emergency number is worse than none. To verify a row,
-phone the facility, confirm its 24×7 emergency service, then fill in `phone` and `verified_on`
-(for example `2026-10-12`). The app then shows it as verified, with that date.
+### Optional: offline facility data
+```bash
+cd backend && python ../scripts/import_osm_facilities.py 26.14 91.66 40000   # Guwahati area
+```
+Facilities your team has checked by phone go in `backend/app/data/verified_facilities.csv`, with a `verified_on` date.
+
+## Tests
+```bash
+cd backend && python -m pytest -q
+```
+There are 57 tests. All provider calls in them are **mocked** (no keys, no network). They cover: arbitrary
+questions reaching the LLM, history for follow-ups, the translation pivot and its failure, missing keys,
+bad keys, rate limits, outages, malformed replies, speech upload and its validation, honest
+language capabilities, emergencies in four languages (including with the AI down), the AI backup triage,
+dose removal, and facility search, caching and labels.
+
+`backend/tests/mock_providers.py` is a mock server with the same API shapes. Use it to drive the full browser
+flow without keys (every mock answer starts with "(mock)").
+
+## Deploy (free tier)
+`render.yaml` and the `Dockerfile` deploy one small service on Render's free plan. Add the keys as secret
+environment variables in the dashboard, never in the repo. Free instances sleep after about 15 minutes idle.
 
 ## Project layout
 ```
 backend/app/
-  main.py            REST API + serves the web phone
-  pipeline.py        STT → read-back → translate → triage → cards → LLM → dose filter → translate → TTS
-  triage.py          multilingual red-flag rules (runs before any AI)
-  facilities.py      hospital search: SQLite seed list + OpenStreetMap, PIN/town/landmark resolver
-  medicine.py        prescription-request detector and dose filter
-  knowledge.py       vetted health cards + retriever
-  languages.py       capability registry
-  prompts.py         fixed prompts (Hindi/Assamese hand-written)
-  handoff.py         consent-gated care slip
-  sessions.py        state machine, in-memory sessions
-  demo.py            offline scenarios
-  providers/         sarvam / groq / parler adapters
-  data/              facilities.csv, places.csv
-backend/tests/       63 tests (call flow, live mocks, triage, navigation, medicine safety)
-frontend/            retro keypad phone (HTML/CSS/vanilla JS), installable as a PWA
-tts_server/          Indic Parler-TTS GPU server
-Dockerfile, render.yaml   free deployment
-docs/                architecture.md, DESIGN.md
+  main.py          API: conversations, speech, emergency, facilities, audio
+  pipeline.py      STT → translate → safety rules → LLM → dose filter → translate → TTS
+  triage.py        multilingual emergency rules (run before any AI)
+  prompts.py       the only fixed texts: emergency, crisis, first aid, location request
+  medicine.py      prescription-request detection, dose removal
+  knowledge.py     reference notes added to the LLM prompt (NE-specific topics)
+  languages.py     capability matrix (documented support + configuration + live verification)
+  facilities.py    OpenStreetMap search, SQLite cache, verified CSV
+  providers/       groq (llm.py), sarvam/whisper (stt.py), sarvam (translate.py), bulbul/mms/parler (tts.py)
+frontend/          one-page web app (HTML/CSS/vanilla JS), installable on phones
+scripts/           verify_live.py, import_osm_facilities.py
+docs/              AUDIT.md (what changed and why), architecture.md
 ```
 
-## Known limitations (say these to the judges)
-- Health cards, triage rules, the hospital list and the Hindi/Assamese text are **not clinically validated or verified**. They need review by a doctor, native speakers, and a phone check of each facility.
-- No voice support yet for Khasi, Garo, Mizo, Kokborok or Nagamese, because no reliable public models exist.
-- Distances are straight-line. Road distance in the hills can be much longer.
-- Sessions are in memory, so a server restart ends calls. Use Redis or Postgres for production.
-- Provider language coverage was checked against public docs in October 2026.
-
-## Sources
-- Sarvam AI models and languages: https://docs.sarvam.ai/api/getting-started/models
-- AI4Bharat Indic Parler-TTS: https://huggingface.co/ai4bharat/indic-parler-tts
-- Groq models: https://console.groq.com/docs/models
-- OpenStreetMap Nominatim and Overpass usage policies: https://operations.osmfoundation.org/policies/
+## Known limitations
+- Health guidance, emergency rules and the hand-written Hindi/Assamese/Bengali texts need review by clinicians and native speakers.
+- Free tiers are rate limited and can change. When a quota runs out, the app says so.
+- OpenStreetMap coverage in rural NE India is incomplete. Phone numbers and emergency departments are listed only where mappers added them.
+- No telephone (keypad-phone) access. It would need a paid telephony provider, and it isn't part of this build.
