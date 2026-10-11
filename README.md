@@ -2,7 +2,6 @@
 
 **Your health. Your language. Your companion.**
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7.svg?logo=render&logoColor=white)](https://aarogya-saathi.onrender.com)
 [![Python Version](https://img.shields.io/badge/Python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 &nbsp;[`Tests: 95 passing`](#testing--verification)
