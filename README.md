@@ -2,10 +2,10 @@
 
 **Your health. Your language. Your companion.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=flat&logo=render&logoColor=white)](https://aarogya-saathi.onrender.com)
-[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7.svg?logo=render&logoColor=white)](https://aarogya-saathi.onrender.com)
+[![Python Version](https://img.shields.io/badge/Python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Tests Passing](https://img.shields.io/badge/tests-95%20passed-brightgreen.svg)](file:///c:/Users/Sarthak/OneDrive/Desktop/aarogya/backend/tests)
+&nbsp;[`Tests: 95 passing`](#testing--verification)
 
 > **Live Application**: [https://aarogya-saathi.onrender.com](https://aarogya-saathi.onrender.com)  
 > *Note: Hosted on Render's free tier. If the instance has been idle, please allow 30–60 seconds for the service to wake up.*
