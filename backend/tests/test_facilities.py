@@ -87,7 +87,7 @@ def test_overpass_mirror_fallback(client, monkeypatch, http):
     facilities.reset()
 
     def handle_interpreter(request):
-        if "lz4" in str(request.url):
+        if "openstreetmap.fr" in str(request.url) or "lz4" in str(request.url):
             return httpx.Response(200, json=OVERPASS)
         return httpx.Response(504)
 
@@ -98,7 +98,7 @@ def test_overpass_mirror_fallback(client, monkeypatch, http):
     # Verify both primary and mirror were called
     hosts = [str(req.url) for req in http.calls if req.url.path.endswith("/api/interpreter")]
     assert any("overpass-api.de" in h for h in hosts)
-    assert any("lz4.overpass-api.de" in h for h in hosts)
+    assert any("openstreetmap.fr" in h or "lz4.overpass-api.de" in h for h in hosts)
 
 
 def test_verified_facilities_fallback_on_outage(client, tmp_path, monkeypatch, http):

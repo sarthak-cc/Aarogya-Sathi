@@ -16,6 +16,7 @@ import asyncio
 import csv
 import difflib
 import json
+import logging
 import math
 import re
 import sqlite3
@@ -106,7 +107,10 @@ _last_nominatim = 0.0
 
 
 def _ua() -> dict:
-    return {"User-Agent": f"AarogyaSaathi/1.0 ({config.settings.osm_contact})"}
+    return {
+        "User-Agent": f"AarogyaSaathi/1.0 ({config.settings.osm_contact}; contact: https://github.com/sarthak-cc/Aarogya-Sathi)",
+        "Accept": "application/json, */*",
+    }
 
 
 async def geocode_osm(text: str) -> Optional[dict]:
@@ -189,16 +193,18 @@ async def resolve(text: str) -> tuple[Optional[dict], Optional[dict]]:
 
 # ---------- facilities near a point ----------
 
+log = logging.getLogger("aarogya.facilities")
+
 OVERPASS_MIRRORS = (
+    "https://overpass.openstreetmap.fr/api/interpreter",
     "https://lz4.overpass-api.de/api/interpreter",
-    "https://z.overpass-api.de/api/interpreter",
 )
 
 
 def _osm_query(lat: float, lon: float, radius: int) -> str:
     around = f"(around:{radius},{lat},{lon})"
     return (
-        f"[out:json][timeout:12];"
+        f"[out:json][timeout:10];"
         f"("
         f'nwr["amenity"~"^(hospital|clinic|doctors)$"]{around};'
         f'nwr["healthcare"~"^(hospital|clinic|centre|doctor)$"]{around};'
@@ -236,18 +242,27 @@ async def fetch_osm(lat: float, lon: float, radius: int) -> list[dict]:
     headers = _ua()
     last_exc = None
     for url in endpoints:
+        t0 = time.perf_counter()
         try:
-            resp = await send("OpenStreetMap hospital search", "POST", url, timeout=12,
+            log.info("Overpass query starting: endpoint=%s radius=%dm", url, radius)
+            resp = await send("OpenStreetMap hospital search", "POST", url, timeout=15,
                               data={"data": query}, headers=headers)
             body = json_of(resp, "OpenStreetMap hospital search")
             found = [f for e in body.get("elements", []) if (f := _from_osm(e))]
+            elapsed = time.perf_counter() - t0
+            log.info("Overpass query succeeded: endpoint=%s found=%d in %.2fs", url, len(found), elapsed)
             db().execute("INSERT OR REPLACE INTO osm_cache VALUES (?,?,?)", (key, time.time(), json.dumps(found)))
             db().commit()
             return found
         except ProviderError as exc:
+            elapsed = time.perf_counter() - t0
+            log.warning("Overpass query failed: endpoint=%s kind=%s detail=%s in %.2fs",
+                        url, exc.kind, exc.detail or "none", elapsed)
             last_exc = exc
             continue
     if last_exc:
+        log.error("All Overpass endpoints exhausted for radius=%dm. Last error: %s (%s)",
+                  radius, last_exc.kind, last_exc.detail or "none")
         raise last_exc
     return []
 
