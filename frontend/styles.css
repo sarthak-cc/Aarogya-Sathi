@@ -366,6 +366,22 @@ button, input { font: inherit; color: inherit; }
 .fac-meta a { color: var(--shell); }
 .verify.no { color: #6E5200; }
 .verify.ok { color: var(--ok); }
+.fac-dir, .fac-map {
+  display: inline-block;
+  font-size: .78rem;
+  font-weight: 500;
+  padding: .1rem .45rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--shell);
+  margin-left: .4rem;
+  background: var(--paper);
+}
+.fac-dir:hover, .fac-map:hover {
+  background: var(--desk);
+  border-color: var(--shell);
+}
 
 /* channels */
 .sub { font-size: 1rem; font-weight: 600; margin: 0 0 .6rem; }

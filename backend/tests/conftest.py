@@ -14,12 +14,21 @@ KEYS = ["SARVAM_API_KEY", "LLM_API_KEY", "GROQ_API_KEY", "PARLER_TTS_URL", "MMS_
 
 
 @pytest.fixture(autouse=True)
-def clean_settings(monkeypatch):
+def clean_settings(monkeypatch, tmp_path):
     for var in KEYS:
         monkeypatch.setenv(var, "")
     monkeypatch.setenv("OSM_ENABLED", "false")
     monkeypatch.setenv("DB_PATH", ":memory:")
     monkeypatch.setenv("LLM_MODEL", "openai/gpt-oss-120b")
+    test_data = tmp_path / "data"
+    test_data.mkdir()
+    (test_data / "verified_facilities.csv").write_text(
+        "# empty\nname,kind,address,lat,lon,phone,emergency,services,verified_on\n", encoding="utf-8"
+    )
+    (test_data / "places.csv").write_text(
+        (facilities.DATA / "places.csv").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    monkeypatch.setattr(facilities, "DATA", test_data)
     config.reload_settings()
     facilities.reset()
     sessions.clear()

@@ -14,6 +14,7 @@
     scenarios: $("scenarios"), chips: $("scenarioChips"), scenarioLabel: $("scenarioLabel"), mute: $("muteToggle"),
     turns: $("turns"), convoEmpty: $("convoEmpty"), langRows: $("langRows"), player: $("player"),
     facSearchInput: $("facSearchInput"), facSearchBtn: $("facSearchBtn"), facGpsBtn: $("facGpsBtn"), hospitalsList: $("hospitalsList"),
+    hospitalEmpty: $("hospitalEmpty"),
   };
 
   const S = {
@@ -31,6 +32,8 @@
     recording: false,
     help: null,
     pinBuf: "",
+    gpsPending: false,
+    facSearchPending: false,
   };
 
   const SCRIPT_ATTR = { "as-IN": "as", "bn-IN": "bn", "mni-IN": "mni", "hi-IN": "hi", "brx-IN": "brx", "ne-IN": "ne", "en-IN": "en" };
@@ -824,22 +827,121 @@
     setControls();
   }
 
+  function showGpsError(msg) {
+    if (el.hospitalEmpty) el.hospitalEmpty.hidden = true;
+    el.hospitalsList.innerHTML = `
+      <div class="notice" style="border-left:4px solid #E67E22;margin-bottom:1rem">
+        <b>GPS Notice</b>
+        <p style="margin:4px 0 0">${esc(msg)}</p>
+      </div>
+      <div class="notice emergency" style="margin-bottom:1rem">
+        <b>For immediate medical emergencies, call directly:</b>
+      </div>
+      <ul class="numbers">
+        <li><span class="num">112</span>National Emergency</li>
+        <li><span class="num">108</span>Ambulance Service</li>
+        <li><span class="num">104</span>Health Helpline</li>
+      </ul>
+    `;
+  }
+
   function useGps() {
-    if (!navigator.geolocation) return screenLocation("No GPS found. Say or type a place.");
+    if (S.gpsPending) return;
+    if (!navigator.geolocation) {
+      showGpsError("Geolocation is not supported by your browser. Please type your location or PIN code.");
+      return screenLocation("No GPS found. Type place or PIN.");
+    }
+    if (window.isSecureContext === false && location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+      showGpsError("Browser security requires an HTTPS connection for GPS location. Please type your town or 6-digit PIN code above.");
+      return screenLocation("HTTPS needed for GPS. Type place.");
+    }
+
+    S.gpsPending = true;
+    if (el.hospitalEmpty) el.hospitalEmpty.hidden = true;
+    if (el.facGpsBtn) {
+      el.facGpsBtn.disabled = true;
+      el.facGpsBtn.textContent = "Locating…";
+    }
+    el.hospitalsList.innerHTML = `
+      <div class="notice">
+        <b>Detecting your location via GPS…</b>
+        <p style="margin:4px 0 0;font-size:0.85rem;color:var(--muted)">Please allow location access if prompted by your browser.</p>
+      </div>
+    `;
     screenProcessing("Getting GPS");
+
+    function onPos(pos) {
+      S.gpsPending = false;
+      if (el.facGpsBtn) {
+        el.facGpsBtn.disabled = false;
+        el.facGpsBtn.textContent = "GPS";
+      }
+      submitFacilitiesSearch({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy_m: pos.coords.accuracy,
+        emergency: S.phase === "emergency",
+      });
+    }
+
+    function onErr(err, isRetry = false) {
+      if (!isRetry && err && err.code === 3) {
+        // High accuracy timed out - try once with normal accuracy
+        navigator.geolocation.getCurrentPosition(
+          onPos,
+          (retryErr) => onErr(retryErr, true),
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        );
+        return;
+      }
+      S.gpsPending = false;
+      if (el.facGpsBtn) {
+        el.facGpsBtn.disabled = false;
+        el.facGpsBtn.textContent = "GPS";
+      }
+      let msg = "Could not detect your location. Please type your town or 6-digit PIN code.";
+      let screenMsg = "Location off. Type place or PIN.";
+      if (err) {
+        if (err.code === 1) { // PERMISSION_DENIED
+          msg = "Location permission was denied. Please allow location access in your browser settings, or type your town/PIN code above.";
+          screenMsg = "GPS denied. Type place.";
+        } else if (err.code === 2) { // POSITION_UNAVAILABLE
+          msg = "Location signal unavailable. Please type your town, district, or 6-digit PIN code.";
+          screenMsg = "Signal lost. Type place.";
+        } else if (err.code === 3) { // TIMEOUT
+          msg = "GPS request timed out. Please click GPS to retry or type your town/PIN code above.";
+          screenMsg = "GPS timed out. Type place.";
+        }
+      }
+      showGpsError(msg);
+      screenLocation(screenMsg);
+    }
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => submitFacilitiesSearch({ lat: pos.coords.latitude, lon: pos.coords.longitude, emergency: S.phase === "emergency" }),
-      () => screenLocation("Location off. Type a place or PIN."),
-      { timeout: 10000, maximumAge: 60000 },
+      onPos,
+      (err) => onErr(err, false),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
     );
   }
 
   async function submitFacilitiesSearch(body) {
+    if (S.facSearchPending) return;
+    S.facSearchPending = true;
     S.busy = true; setControls();
+    if (el.hospitalEmpty) el.hospitalEmpty.hidden = true;
+    if (el.facSearchBtn) el.facSearchBtn.disabled = true;
+    const targetLabel = body.text ? `“${body.text}”` : "your coordinates";
+    el.hospitalsList.innerHTML = `
+      <div class="notice">
+        <b>Searching for facilities near ${esc(targetLabel)}…</b>
+      </div>
+    `;
     screenProcessing("Searching");
     try {
       const r = await post("/api/facilities/search", body);
+      S.facSearchPending = false;
       S.busy = false; S.pinBuf = "";
+      if (el.facSearchBtn) el.facSearchBtn.disabled = false;
       S.phase = "help"; S.help = r;
       screenHelp(r);
       sfx.blip();
@@ -848,7 +950,20 @@
       renderHospitalsTab(r);
       switchTab("hospitals");
     } catch (e) {
-      S.busy = false; S.phase = "location"; screenNotice("Error", e.message);
+      S.facSearchPending = false;
+      S.busy = false; S.phase = "location";
+      if (el.facSearchBtn) el.facSearchBtn.disabled = false;
+      screenNotice("Error", e.message);
+      el.hospitalsList.innerHTML = `
+        <div class="notice" style="border-left:4px solid var(--alert);margin-bottom:1rem">
+          <b>Search failed</b>
+          <p style="margin:4px 0 0">${esc(e.message || "Could not reach the server. Please check your connection.")}</p>
+        </div>
+        <ul class="numbers">
+          <li><span class="num">112</span>National Emergency</li>
+          <li><span class="num">108</span>Ambulance Service</li>
+        </ul>
+      `;
     }
     setControls();
   }
@@ -1109,10 +1224,22 @@
 
 
   function facilityItem(f, first) {
+    const dirLink = f.directions_url ? `<a href="${esc(f.directions_url)}" target="_blank" rel="noopener noreferrer" class="fac-dir">Directions ↗</a>` : "";
+    const mapLink = f.map_url ? `<a href="${esc(f.map_url)}" target="_blank" rel="noopener noreferrer" class="fac-map">Map ↗</a>` : "";
+    const emergBadge = f.emergency === "yes" ? '<span class="source emergency" style="font-size:0.75rem;padding:2px 6px">Emergency 24x7</span>' : "";
     return `<li class="facility${first ? " nearest" : ""}">
-      <p class="fac-name"><b>${esc(f.name)}</b> ${f.distance_km ? `<span class="km">${f.distance_km} km</span>` : ""}${first ? ' <span class="source">Suggested</span>' : ""}</p>
+      <p class="fac-name">
+        <b>${esc(f.name)}</b>
+        ${f.distance_km != null ? `<span class="km">${f.distance_km} km</span>` : ""}
+        ${first ? ' <span class="source">Suggested</span>' : ""}
+        ${emergBadge}
+      </p>
       <p class="fac-meta">${[f.address, f.district, f.state].filter(Boolean).map(esc).join(", ")}</p>
-      <p class="fac-meta">${f.phone ? `Phone: <a href="tel:${esc(f.phone)}">${esc(f.phone)}</a> · ` : ""}${f.verified ? '<span class="verify ok">Verified 24x7</span>' : '<span class="verify no">Community listing</span>'}</p>
+      <p class="fac-meta">
+        ${f.phone ? `Phone: <a href="tel:${esc(f.phone)}">${esc(f.phone)}</a> · ` : ""}
+        ${f.verified ? '<span class="verify ok">Verified</span>' : '<span class="verify no">Community data</span>'}
+        ${dirLink}${mapLink}
+      </p>
     </li>`;
   }
 
@@ -1137,10 +1264,62 @@
   }
 
   function renderHospitalsTab(r) {
+    if (el.hospitalEmpty) el.hospitalEmpty.hidden = true;
     const facs = r.facilities || [];
+    const placeName = (r.place && r.place.name) || (r.place && r.place.lat ? `${r.place.lat.toFixed(3)}, ${r.place.lon.toFixed(3)}` : "you");
+
+    if (facs.length > 0) {
+      const limHtml = r.limitation ? `<p class="fac-meta" style="margin-top:6px;color:#6E5200">ℹ ${esc(r.limitation)}</p>` : "";
+      el.hospitalsList.innerHTML = `
+        <div class="notice" style="margin-bottom:1rem">
+          <b>Found ${facs.length} facilities near ${esc(placeName)}</b>
+          ${limHtml}
+        </div>
+        <ol class="facilities">${facs.map((f, i) => facilityItem(f, i === 0)).join("")}</ol>
+        <div style="margin-top:1.25rem;padding-top:0.75rem;border-top:1px solid var(--rule)">
+          <p class="cards" style="margin-bottom:0.5rem">Emergency Helplines</p>
+          <ul class="numbers">
+            <li><span class="num">112</span>National Emergency</li>
+            <li><span class="num">108</span>Ambulance Service</li>
+            <li><span class="num">104</span>Health Information</li>
+            <li><span class="num">14416</span>Tele-MANAS Mental Health</li>
+          </ul>
+        </div>
+      `;
+      return;
+    }
+
+    if (r.error) {
+      el.hospitalsList.innerHTML = `
+        <div class="notice" style="border-left:4px solid var(--alert);margin-bottom:1rem">
+          <b>Live hospital lookup temporarily unavailable</b>
+          <p style="margin:4px 0 0">${esc((r.error && r.error.message) || r.limitation || "Could not reach live OpenStreetMap servers.")}</p>
+          <p style="margin:6px 0 0;font-size:0.85rem;color:var(--muted)">Try searching a nearby major town (e.g. Guwahati, Dispur, Silchar, Dibrugarh) or enter a 6-digit PIN code.</p>
+        </div>
+        <div class="notice emergency" style="margin-bottom:1rem">
+          <b>For immediate emergency assistance, call directly:</b>
+        </div>
+        <ul class="numbers">
+          <li><span class="num">112</span>National Emergency (Police, Fire, Ambulance)</li>
+          <li><span class="num">108</span>Ambulance Service (Assam & North East)</li>
+          <li><span class="num">104</span>Health Information Helpline</li>
+          <li><span class="num">14416</span>Tele-MANAS Mental Health</li>
+        </ul>
+      `;
+      return;
+    }
+
     el.hospitalsList.innerHTML = `
-      <div class="notice" style="margin-bottom:1rem"><b>Found ${facs.length} facilities near ${esc((r.place && r.place.name) || "you")}</b></div>
-      <ol class="facilities">${facs.map((f, i) => facilityItem(f, i === 0)).join("")}</ol>
+      <div class="notice" style="margin-bottom:1rem">
+        <b>No facilities found near ${esc(placeName)}</b>
+        <p style="margin:4px 0 0">${esc(r.limitation || "No medical facilities found within the search radius in the available data.")}</p>
+        <p style="margin:6px 0 0;font-size:0.85rem;color:var(--muted)">Try searching a nearby town, district headquarters, or a 6-digit PIN code.</p>
+      </div>
+      <ul class="numbers">
+        <li><span class="num">112</span>National Emergency</li>
+        <li><span class="num">108</span>Ambulance Service</li>
+        <li><span class="num">104</span>Health Helpline</li>
+      </ul>
     `;
   }
 
@@ -1558,6 +1737,13 @@
     const q = el.facSearchInput.value.trim();
     if (q) submitFacilitiesSearch({ text: q, emergency: false });
   };
+  el.facSearchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const q = el.facSearchInput.value.trim();
+      if (q) submitFacilitiesSearch({ text: q, emergency: false });
+    }
+  });
   el.facGpsBtn.onclick = () => useGps();
   el.mute.onchange = () => { if (el.mute.checked) stopAudio(); };
   document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => switchTab(b.dataset.tab)));

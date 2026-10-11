@@ -80,3 +80,40 @@ def test_verified_rows_only_with_a_date(tmp_path, monkeypatch):
     assert [r["name"] for r in rows] == ["Checked Hospital"]
     shown = facilities._present(rows[0], 26.15, 91.66)
     assert shown["verified"] and "verified by the team" in shown["phone_label"]
+
+
+def test_overpass_mirror_fallback(client, monkeypatch, http):
+    configure(monkeypatch, OSM_ENABLED="true")
+    facilities.reset()
+
+    def handle_interpreter(request):
+        if "lz4" in str(request.url):
+            return httpx.Response(200, json=OVERPASS)
+        return httpx.Response(504)
+
+    http.on("/api/interpreter", handle_interpreter)
+    r = client.post("/api/facilities/search", json={"lat": 26.143, "lon": 91.660}).json()
+    assert r["facilities"]
+    assert any(f["name"] == "Campus Clinic" for f in r["facilities"])
+    # Verify both primary and mirror were called
+    hosts = [str(req.url) for req in http.calls if req.url.path.endswith("/api/interpreter")]
+    assert any("overpass-api.de" in h for h in hosts)
+    assert any("lz4.overpass-api.de" in h for h in hosts)
+
+
+def test_verified_facilities_fallback_on_outage(client, tmp_path, monkeypatch, http):
+    configure(monkeypatch, OSM_ENABLED="true")
+    csv = tmp_path / "verified_facilities.csv"
+    csv.write_text("name,kind,address,lat,lon,phone,emergency,services,verified_on\n"
+                   "Guwahati CHC,hospital,Jalukbari,26.143,91.660,108,yes,Emergency,2026-10-11\n", encoding="utf-8")
+    monkeypatch.setattr(facilities, "DATA", tmp_path)
+    facilities.reset()
+    http.on("/api/interpreter", httpx.Response(504))
+
+    r = client.post("/api/facilities/search", json={"lat": 26.143, "lon": 91.660}).json()
+    assert len(r["facilities"]) == 1
+    assert r["facilities"][0]["name"] == "Guwahati CHC"
+    assert r["facilities"][0]["verified"] is True
+    assert r["error"] is None  # Error cleared because facilities were provided
+    assert "verified" in r["limitation"].lower()
+
