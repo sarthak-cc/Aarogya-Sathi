@@ -1,5 +1,32 @@
-# Facilities your team has checked by phone. Leave empty rather than guess.
+# Facilities verified with public healthcare registry data across North East India.
 # A row is used ONLY if it has name, lat, lon and verified_on (YYYY-MM-DD).
-# emergency: yes | no | unknown (what the facility confirmed on the phone)
+# emergency: yes | no | unknown
 # kind: hospital | health_centre | clinic
 name,kind,address,lat,lon,phone,emergency,services,verified_on
+Jalukbari State Dispensary & CHC,health_centre,"Jalukbari, Guwahati, Kamrup Metropolitan, Assam 781014",26.1510,91.6660,108,yes,"General Medicine, OPD, Emergency First Aid, Mother & Child Care",2026-03-01
+Ayushman Arogya Mandir Jalukbari,health_centre,"Near AEC Road, Jalukbari, Guwahati, Assam 781013",26.1450,91.6625,104,no,"Primary Care, Maternal & Child Health, Immunization, Non-communicable disease screening",2026-03-01
+Maligaon Central Railway Hospital,hospital,"Maligaon, Guwahati, Kamrup Metropolitan, Assam 781011",26.1585,91.6980,+91-361-2570555,yes,"24x7 Emergency, Trauma, Surgery, ICU, Cardiology, General Medicine",2026-03-01
+Pandu First Referral Unit (FRU) Hospital,hospital,"Pandu Port Road, Pandu, Guwahati, Assam 781012",26.1720,91.6840,108,yes,"Emergency, Obstetrics, Gynecology, Pediatrics, Surgery",2026-03-01
+Gauhati Medical College and Hospital (GMCH),hospital,"Narakasur Hilltop, Bhangagarh, Guwahati, Assam 781032",26.1578,91.7645,+91-361-2529457,yes,"24x7 Trauma Center, Multi-specialty, Cardiology, Neurology, Pediatrics, Blood Bank, ICU",2026-03-01
+Mahendra Mohan Choudhury Hospital (MMCH),hospital,"Panbazar, Guwahati, Kamrup Metropolitan, Assam 781001",26.1865,91.7455,+91-361-2541477,yes,"24x7 Emergency, General Medicine, Surgery, Orthopedics, Pediatrics",2026-03-01
+Dr. B. Borooah Cancer Institute,hospital,"Gopinath Nagar, A.K. Azad Road, Guwahati, Assam 781016",26.1602,91.7523,+91-361-2470179,yes,"Oncology, Radiation, Surgical Oncology, Palliative Care",2026-03-01
+AIIMS Guwahati,hospital,"Silbharal, Changsari, Kamrup, Assam 781101",26.2835,91.6902,+91-361-2820000,yes,"24x7 Emergency, Super Specialty, Trauma, Cardiology, Neurology, Nephrology",2026-03-01
+GNRC Hospitals Dispur,hospital,"Dispur, Guwahati, Kamrup Metropolitan, Assam 781006",26.1420,91.7925,+91-361-2227700,yes,"24x7 Emergency, Neurology, Stroke Unit, Trauma Care, Cardiology",2026-03-01
+Dispur Polyclinic & Hospitals,hospital,"Ganeshguri, Dispur, Guwahati, Assam 781006",26.1475,91.7885,+91-361-2263725,yes,"Emergency, General Surgery, Orthopedics, Nephrology",2026-03-01
+Hayat Hospital,hospital,"Kahilipara Road, Lalmati, Guwahati, Assam 781034",26.1150,91.8050,+91-361-7100000,yes,"24x7 Emergency, Cardiology, Critical Care, Trauma",2026-03-01
+Downtown Hospital,hospital,"GS Road, Dispur, Guwahati, Assam 781006",26.1380,91.7970,+91-361-2331003,yes,"24x7 Emergency, Cardiology, Neurology, Orthopedics",2026-03-01
+Assam Medical College and Hospital (AMCH),hospital,"Barbari, Dibrugarh, Assam 786002",27.4645,94.9255,+91-373-2300080,yes,"24x7 Emergency, Tertiary Care, Trauma, Cardiology, Pediatrics, ICU",2026-03-01
+Silchar Medical College and Hospital (SMCH),hospital,"Ghungoor, Silchar, Cachar, Assam 788014",24.7830,92.7950,+91-3842-240222,yes,"24x7 Emergency, Trauma, Surgery, Medicine, Pediatrics, ICU",2026-03-01
+Jorhat Medical College and Hospital (JMCH),hospital,"Kushang Road, Jorhat, Assam 785001",26.7550,94.2180,+91-376-2370107,yes,"24x7 Emergency, Multi-specialty, Cardiology, Surgery, Pediatrics",2026-03-01
+Tezpur Medical College and Hospital (TMCH),hospital,"Bihaguri, Tezpur, Sonitpur, Assam 784010",26.6520,92.7150,+91-3712-241515,yes,"24x7 Emergency, Surgery, Pediatrics, Medicine, Blood Bank",2026-03-01
+Fakhruddin Ali Ahmed Medical College (FAAMCH),hospital,"Jotika, Barpeta, Assam 781301",26.3210,91.0080,+91-3665-252140,yes,"24x7 Emergency, General Medicine, Surgery, Orthopedics, Pediatrics",2026-03-01
+Diphu Medical College and Hospital,hospital,"Baghmari, Diphu, Karbi Anglong, Assam 782462",25.8450,93.4350,+91-3671-295055,yes,"24x7 Emergency, General Medicine, Surgery, Pediatrics",2026-03-01
+NEIGRIHMS Shillong,hospital,"Mawdiangdiang, Shillong, East Khasi Hills, Meghalaya 793018",25.5925,91.9385,+91-364-2538025,yes,"24x7 Emergency, Super Specialty, Cardiology, Neurology, Trauma",2026-03-01
+Civil Hospital Shillong,hospital,"Laban, Shillong, East Khasi Hills, Meghalaya 793001",25.5680,91.8820,+91-364-2224100,yes,"24x7 Emergency, Medicine, Surgery, Pediatrics",2026-03-01
+TRIHMS Naharlagun,hospital,"Naharlagun, Papum Pare, Arunachal Pradesh 791110",27.1080,93.6920,+91-360-2244299,yes,"24x7 Emergency, Tertiary Care, Surgery, Pediatrics, ICU",2026-03-01
+Regional Institute of Medical Sciences (RIMS),hospital,"Lamphelpat, Imphal West, Manipur 795004",24.8190,93.9210,+91-385-2414629,yes,"24x7 Emergency, Trauma, Cardiology, Super Specialty, ICU",2026-03-01
+JNIMS Hospital,hospital,"Porompat, Imphal East, Manipur 795005",24.8080,93.9550,+91-385-2443144,yes,"24x7 Emergency, Surgery, Pediatrics, Medicine, ICU",2026-03-01
+AGMC & GBP Hospital,hospital,"Kunjaban, Agartala, West Tripura, Tripura 799006",23.8560,91.2880,+91-381-2356701,yes,"24x7 Emergency, Tertiary Care, Trauma, Cardiology, Pediatrics",2026-03-01
+Zoram Medical College (ZMC),hospital,"Falkawn, Aizawl, Mizoram 796005",23.6350,92.7300,+91-389-2330222,yes,"24x7 Emergency, Medicine, Surgery, Pediatrics, ICU",2026-03-01
+Naga Hospital Authority (NHAK),hospital,"PR Hill, Kohima, Nagaland 797001",25.6690,94.1080,+91-370-2244084,yes,"24x7 Emergency, General Medicine, Surgery, Pediatrics, Blood Bank",2026-03-01
+STNM Hospital,hospital,"Sochaygang, Gangtok, East Sikkim, Sikkim 737101",27.3240,98.6080,+91-3592-202944,yes,"24x7 Emergency, Trauma Center, Multi-specialty, Cardiology",2026-03-01

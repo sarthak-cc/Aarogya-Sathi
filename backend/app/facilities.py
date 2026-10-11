@@ -16,6 +16,7 @@ import asyncio
 import csv
 import difflib
 import json
+import logging
 import math
 import re
 import sqlite3
@@ -106,7 +107,10 @@ _last_nominatim = 0.0
 
 
 def _ua() -> dict:
-    return {"User-Agent": f"AarogyaSaathi/1.0 ({config.settings.osm_contact})"}
+    return {
+        "User-Agent": f"AarogyaSaathi/1.0 ({config.settings.osm_contact}; contact: https://github.com/sarthak-cc/Aarogya-Sathi)",
+        "Accept": "application/json, */*",
+    }
 
 
 async def geocode_osm(text: str) -> Optional[dict]:
@@ -189,12 +193,24 @@ async def resolve(text: str) -> tuple[Optional[dict], Optional[dict]]:
 
 # ---------- facilities near a point ----------
 
+log = logging.getLogger("aarogya.facilities")
+
+OVERPASS_MIRRORS = (
+    "https://overpass.openstreetmap.fr/api/interpreter",
+    "https://lz4.overpass-api.de/api/interpreter",
+)
+
+
 def _osm_query(lat: float, lon: float, radius: int) -> str:
     around = f"(around:{radius},{lat},{lon})"
-    parts = "".join(f'{t}["{k}"="{v}"]{around};' for t in ("node", "way", "relation")
-                    for k, v in (("amenity", "hospital"), ("amenity", "clinic"), ("healthcare", "hospital"),
-                                 ("healthcare", "clinic"), ("healthcare", "centre")))
-    return f"[out:json][timeout:15];({parts});out center tags 60;"
+    return (
+        f"[out:json][timeout:10];"
+        f"("
+        f'nwr["amenity"~"^(hospital|clinic|doctors)$"]{around};'
+        f'nwr["healthcare"~"^(hospital|clinic|centre|doctor)$"]{around};'
+        f");"
+        f"out center tags 50;"
+    )
 
 
 def _from_osm(e: dict) -> Optional[dict]:
@@ -220,13 +236,35 @@ async def fetch_osm(lat: float, lon: float, radius: int) -> list[dict]:
     row = db().execute("SELECT fetched, payload FROM osm_cache WHERE key = ?", (key,)).fetchone()
     if row and time.time() - row["fetched"] < CACHE_DAYS * 86400:
         return json.loads(row["payload"])
-    resp = await send("OpenStreetMap hospital search", "POST", config.settings.overpass_url, timeout=25,
-                      data={"data": _osm_query(lat, lon, radius)}, headers=_ua())
-    body = json_of(resp, "OpenStreetMap hospital search")
-    found = [f for e in body.get("elements", []) if (f := _from_osm(e))]
-    db().execute("INSERT OR REPLACE INTO osm_cache VALUES (?,?,?)", (key, time.time(), json.dumps(found)))
-    db().commit()
-    return found
+    primary = config.settings.overpass_url
+    endpoints = [primary] + [m for m in OVERPASS_MIRRORS if m != primary]
+    query = _osm_query(lat, lon, radius)
+    headers = _ua()
+    last_exc = None
+    for url in endpoints:
+        t0 = time.perf_counter()
+        try:
+            log.info("Overpass query starting: endpoint=%s radius=%dm", url, radius)
+            resp = await send("OpenStreetMap hospital search", "POST", url, timeout=15,
+                              data={"data": query}, headers=headers)
+            body = json_of(resp, "OpenStreetMap hospital search")
+            found = [f for e in body.get("elements", []) if (f := _from_osm(e))]
+            elapsed = time.perf_counter() - t0
+            log.info("Overpass query succeeded: endpoint=%s found=%d in %.2fs", url, len(found), elapsed)
+            db().execute("INSERT OR REPLACE INTO osm_cache VALUES (?,?,?)", (key, time.time(), json.dumps(found)))
+            db().commit()
+            return found
+        except ProviderError as exc:
+            elapsed = time.perf_counter() - t0
+            log.warning("Overpass query failed: endpoint=%s kind=%s detail=%s in %.2fs",
+                        url, exc.kind, exc.detail or "none", elapsed)
+            last_exc = exc
+            continue
+    if last_exc:
+        log.error("All Overpass endpoints exhausted for radius=%dm. Last error: %s (%s)",
+                  radius, last_exc.kind, last_exc.detail or "none")
+        raise last_exc
+    return []
 
 
 def stored_near(lat: float, lon: float, radius_km: float) -> list[dict]:
@@ -283,7 +321,13 @@ async def find(lat: float, lon: float, emergency: bool = False, limit: int = 8) 
         limitation = ("No facility data source is configured. Turn on OpenStreetMap (OSM_ENABLED=true) or add "
                       "checked facilities to data/verified_facilities.csv.")
     elif not items:
-        limitation = f"No facilities found within {radius_used // 1000} km in the available data."
+        if error:
+            limitation = "Live hospital lookup was temporarily unavailable. Please call 112 or 108 for immediate medical assistance."
+        else:
+            limitation = f"No facilities found within {radius_used // 1000} km in the available data. Try searching a nearby larger town or PIN code."
+    elif error:
+        limitation = "Showing verified local facilities. Live OpenStreetMap lookup was temporarily unavailable."
+        error = None
     return {"facilities": items[:limit], "emergency_numbers": EMERGENCY_NUMBERS, "notice": NOT_CONTACTED,
             "error": error, "limitation": limitation,
             "distance_note": "Straight-line distance. Road distance in the hills can be much longer.",
